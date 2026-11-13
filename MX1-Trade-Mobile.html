@@ -1,0 +1,1301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MX1 Trade Mobile</title>
+<meta name="theme-color" content="#06090F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500&display=swap">
+<style>
+/* Layout: phone-width app shell, sticky header, scrolling view, fixed bottom tab bar. Single dark "Obsidian" look by design. */
+:root{
+  --bg:#06090F; --surface:#0C121D; --surface-2:#111A2A; --band:#122140; --line:#1A2740;
+  --fg:#E8EDF7; --muted:#8592AB; --dim:#56627A;
+  --indigo:#6A78FF; --aqua:#3FE9FF; --gold:#E4C88E;
+  --up:#3ACB92; --down:#FF5C6C; --warn:#F2B34D;
+  --f-display:"Sora",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Manrope",ui-sans-serif,system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:14px;
+  color-scheme:dark;
+}
+html,body{height:100%}
+:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--aqua);outline-offset:2px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .down{color:var(--down)}
+
+.app{max-width:460px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;border-inline:1px solid var(--line)}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:12px;
+  background:linear-gradient(140deg,var(--indigo),var(--aqua));color:#06090F}
+.brand b{font-family:var(--f-display);font-weight:600;font-size:15px;letter-spacing:.01em}
+.brand small{display:block;color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.venue{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--up);box-shadow:0 0 0 3px color-mix(in srgb,var(--up) 22%,transparent);flex:none}
+.dot.off{background:var(--down);box-shadow:0 0 0 3px color-mix(in srgb,var(--down) 22%,transparent)}
+.dot.idle{background:var(--dim);box-shadow:none}
+.demo{background:color-mix(in srgb,var(--gold) 14%,transparent);color:var(--gold);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:5px;font-weight:700}
+
+main{flex:1;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:16px calc(92px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+section.view,.panel{display:flex;flex-direction:column;gap:14px}
+h2.vt{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0;text-wrap:balance}
+.label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.hint{color:var(--dim);font-size:11.5px;line-height:1.45}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.stack{display:flex;flex-direction:column;gap:10px}
+
+/* Live hero */
+.hero{background:linear-gradient(180deg,var(--band),var(--surface) 70%);padding:16px 14px 10px}
+.eq{font-family:var(--f-num);font-weight:600;font-size:34px;letter-spacing:-.02em;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.eq .c{color:var(--muted);font-size:22px}
+.flash-up{animation:fu .6s} .flash-down{animation:fd .6s}
+@keyframes fu{0%{color:var(--up)}100%{color:inherit}} @keyframes fd{0%{color:var(--down)}100%{color:inherit}}
+.pnlline{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:6px 11px;border-radius:999px;border:1px solid var(--line);font-size:12px;color:var(--muted);font-weight:600}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip.live[aria-pressed="true"]{background:var(--aqua);border-color:var(--aqua)}
+canvas.spark{width:100%;height:150px;display:block;margin-top:8px}
+canvas.candles{width:100%;height:230px;display:block}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
+.stat .v{font-family:var(--f-num);font-size:15px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+
+.engine{display:flex;align-items:center;gap:12px}
+.orb{width:44px;height:44px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,var(--aqua),var(--indigo) 60%,var(--band));position:relative}
+.orb::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1px solid var(--aqua);opacity:.5;animation:pulse 2.4s infinite}
+.orb.stopped{background:var(--surface-2)} .orb.stopped::after{display:none}
+@keyframes pulse{0%{transform:scale(.9);opacity:.6}100%{transform:scale(1.25);opacity:0}}
+.kill{width:100%;padding:13px;border-radius:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:12px;
+  border:1px solid color-mix(in srgb,var(--down) 55%,transparent);color:var(--down);background:color-mix(in srgb,var(--down) 8%,transparent)}
+.kill.resume{border-color:color-mix(in srgb,var(--up) 55%,transparent);color:var(--up);background:color-mix(in srgb,var(--up) 8%,transparent)}
+.feed{display:flex;flex-direction:column}
+.feed .it{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:12.5px;align-items:center}
+.feed .it:first-child{border-top:0}
+.feed .t{color:var(--dim);font-family:var(--f-num);font-size:11px}
+.agent{color:var(--aqua);font-weight:600}
+
+/* Signals */
+.sig{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.pill{font-size:11px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:7px;min-width:48px;text-align:center}
+.pill.BUY{background:color-mix(in srgb,var(--up) 16%,transparent);color:var(--up)}
+.pill.SELL{background:color-mix(in srgb,var(--down) 16%,transparent);color:var(--down)}
+.pill.HOLD{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+.sig .pair{font-family:var(--f-display);font-weight:600;font-size:15px}
+.sig .meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.conf{width:64px;height:4px;border-radius:2px;background:var(--surface-2);overflow:hidden;margin-top:6px;margin-left:auto}
+.conf i{display:block;height:100%;background:var(--aqua)}
+.new{animation:slide .5s ease-out}
+@keyframes slide{from{transform:translateY(-6px);background:color-mix(in srgb,var(--aqua) 10%,var(--surface))}to{transform:none}}
+
+/* Controls */
+.switch{width:52px;height:30px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);position:relative;flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.switch[aria-checked="true"]{background:color-mix(in srgb,var(--up) 30%,var(--surface-2));border-color:var(--up)}
+.switch[aria-checked="true"]::after{transform:translateX(22px);background:var(--up)}
+.seg{display:grid;grid-template-columns:repeat(var(--n,3),1fr);background:var(--surface-2);border-radius:11px;padding:3px;gap:3px}
+.seg button{padding:9px 4px;border-radius:9px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--band);color:var(--fg);box-shadow:inset 0 0 0 1px var(--indigo)}
+.seg.mode{--n:2;padding:4px}
+.seg.mode button{padding:11px 4px;font-size:13.5px}
+.seg.mode button[aria-pressed="true"]{background:var(--indigo);color:#fff;box-shadow:none}
+input[type=range]{width:100%;accent-color:var(--aqua)}
+.field{display:flex;flex-direction:column;gap:6px}
+.in,select.in{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:11px 12px;font:inherit;font-family:var(--f-num);font-size:14px;min-width:0}
+.in.err{border-color:var(--down)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qchips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.qchips button{padding:7px 0;border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--muted);font-weight:600}
+.primary{width:100%;padding:14px;border-radius:12px;font-weight:700;font-size:14.5px;color:#06090F;background:linear-gradient(100deg,var(--indigo),var(--aqua))}
+.btn{padding:12px 14px;border-radius:12px;font-weight:700;border:1px solid var(--line)}
+.btn.go{background:var(--up);border-color:var(--up);color:#06090F}
+.btn.danger{background:var(--down);border-color:var(--down);color:#fff}
+.btn.ghost-d{color:var(--down);border-color:color-mix(in srgb,var(--down) 50%,transparent)}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.alert{border:1px solid color-mix(in srgb,var(--down) 50%,transparent);background:color-mix(in srgb,var(--down) 9%,transparent);border-radius:12px;padding:11px 12px;font-size:12.5px}
+.alert b{color:var(--down)}
+.statusbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.spill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.spill.on{color:var(--up);border-color:color-mix(in srgb,var(--up) 50%,transparent)}
+.mini-seg{display:inline-grid;grid-template-columns:1fr 1fr;background:var(--surface-2);border-radius:999px;padding:2px}
+.mini-seg button{padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;color:var(--muted)}
+.mini-seg button[aria-pressed="true"]{background:var(--indigo);color:#fff}
+
+/* Manual */
+.pairbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pairbar select{width:auto;font-family:var(--f-display);font-weight:600;font-size:15px;padding:8px 30px 8px 12px}
+.px{font-family:var(--f-num);font-weight:600;font-size:20px}
+.ohlc{font-family:var(--f-num);font-size:10.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 6px}
+.result{border:1px solid var(--indigo);background:linear-gradient(180deg,color-mix(in srgb,var(--indigo) 14%,var(--surface)),var(--surface));border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kv div{background:var(--bg);border-radius:10px;padding:8px 10px;min-width:0}
+.kv b{display:block;font-family:var(--f-num);font-size:13px;margin-top:3px}
+.steps-run{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--muted)}
+.steps-run .ok{color:var(--up)}
+.pos{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:11px 0;border-top:1px solid var(--line);font-size:12.5px}
+.pos:first-of-type{border-top:0}
+.pos .sub{color:var(--muted);font-size:11.5px;font-family:var(--f-num)}
+.xbtn{font-size:11px;font-weight:700;color:var(--down);border:1px solid color-mix(in srgb,var(--down) 45%,transparent);border-radius:7px;padding:4px 9px}
+.empty{color:var(--dim);text-align:center;padding:14px 0;font-size:12.5px}
+
+/* Auto wizard */
+.stepper{display:flex;align-items:center;gap:0}
+.stepper .s{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--dim);flex:none}
+.stepper .s.done{background:var(--aqua);border-color:var(--aqua);color:#06090F}
+.stepper .s.cur{border-color:var(--aqua);color:var(--aqua)}
+.stepper .ln{flex:1;height:1.5px;background:var(--line)}
+.stepper .ln.done{background:var(--aqua)}
+.steplabels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px}
+.pairgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pairgrid button{padding:10px 4px;border-radius:10px;border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--dim)}
+.pairgrid button[aria-pressed="true"]{border-color:var(--aqua);color:var(--fg);background:color-mix(in srgb,var(--aqua) 8%,transparent)}
+.alloc-row{display:grid;grid-template-columns:52px 1fr 74px;gap:8px;align-items:center}
+.alloc-row b{font-size:13px}
+.colhead{display:grid;grid-template-columns:52px 1fr 74px;gap:8px}
+.total{display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);border-radius:12px;padding:12px}
+.total b{font-family:var(--f-num);font-size:17px}
+.review div{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:13px}
+.review div:first-child{border-top:0}
+.review span{color:var(--muted)}
+.layer{border-top:1px solid var(--line);padding-top:10px}
+.layer:first-of-type{border-top:0;padding-top:0}
+.agents{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ag{display:flex;align-items:center;gap:6px;font-size:11.5px;padding:5px 9px;border-radius:8px;background:var(--surface-2);color:var(--fg)}
+.ag .dot{width:6px;height:6px;box-shadow:none}
+.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 7px;white-space:nowrap}
+
+.seg.risk3 button[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--warn);color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,var(--surface-2))}
+.pairgrid.strat button{text-align:left;padding:10px;display:flex;flex-direction:column;gap:4px;color:var(--muted)}
+.pairgrid.strat button b{color:var(--fg);font-size:13px}
+.pairgrid.strat button span{font-size:10.5px;line-height:1.35;font-weight:500}
+.pairgrid.strat button[aria-pressed="true"] span{color:var(--muted)}
+.iconbtn{position:relative;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;flex:none}
+.iconbtn svg{width:17px;height:17px;stroke:var(--fg);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.badge{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;background:var(--aqua);color:#06090F;font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 4px}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(140deg,var(--aqua),var(--indigo));color:#06090F;font-weight:800;display:grid;place-items:center;flex:none}
+.menu{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.menu a,.menu button{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border-top:1px solid var(--line);color:var(--fg);text-decoration:none;text-align:left}
+.menu a:first-child,.menu button:first-child{border-top:0}
+.menu .ic{width:32px;height:32px;border-radius:9px;background:var(--surface-2);display:grid;place-items:center;flex:none}
+.menu .ic svg{width:17px;height:17px;stroke:var(--aqua);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.menu .tx{flex:1;min-width:0}.menu .tx b{font-size:14px;font-weight:600}.menu .tx div{font-size:11.5px;color:var(--muted);margin-top:1px}
+.menu .chev{color:var(--dim)}
+.back{color:var(--aqua);text-decoration:none;font-weight:600;font-size:13.5px}
+.fab{position:fixed;z-index:8;bottom:calc(80px + env(safe-area-inset-bottom,0px));right:max(16px,calc((100vw - 460px)/2 + 16px),calc(env(safe-area-inset-right,0px) + 16px));
+  width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--aqua),var(--indigo) 60%,var(--band));box-shadow:0 8px 24px rgba(0,0,0,.5),0 0 0 1px color-mix(in srgb,var(--aqua) 40%,transparent);display:grid;place-items:center}
+.fab svg{width:22px;height:22px;stroke:#06090F;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.banner{position:fixed;z-index:40;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 8px);width:min(440px,calc(100% - 24px));
+  background:color-mix(in srgb,var(--surface-2) 92%,transparent);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:18px;padding:11px 13px;display:flex;gap:11px;align-items:flex-start;
+  box-shadow:0 12px 30px rgba(0,0,0,.5);animation:drop .35s cubic-bezier(.2,.9,.3,1.2);text-align:left}
+@keyframes drop{from{transform:translate(-50%,-30px);opacity:0}}
+.banner .mk{width:34px;height:34px;border-radius:9px;flex:none;font-size:10px}
+.banner b{font-size:13px}.banner p{margin:2px 0 0;font-size:12.5px;color:var(--muted);line-height:1.4}
+.banner .when{margin-left:auto;font-size:10.5px;color:var(--dim);flex:none}
+.ibx{display:flex;gap:11px;padding:11px 0;border-top:1px solid var(--line)}
+.ibx:first-child{border-top:0}
+.ibx .k{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none;font-size:13px;background:var(--surface-2)}
+.ibx.unread b::after{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--aqua);margin-left:6px;vertical-align:middle}
+.sheet .scroll{max-height:62vh;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.face{width:86px;height:86px;margin:6px auto;position:relative}
+.face svg{width:100%;height:100%;stroke:var(--aqua);fill:none;stroke-width:3;stroke-linecap:round}
+.face .scan{position:absolute;left:8%;right:8%;height:2px;background:var(--aqua);box-shadow:0 0 12px var(--aqua);animation:scan 1s ease-in-out infinite alternate}
+@keyframes scan{from{top:12%}to{top:86%}}
+.face.ok svg{stroke:var(--up)}.face.ok .scan{display:none}
+.overlay{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;align-items:center;
+  padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-block:calc(env(safe-area-inset-top,0px) + 20px) calc(env(safe-area-inset-bottom,0px) + 20px);overflow-y:auto}
+.overlay .inner{width:100%;max-width:420px;flex:1;display:flex;flex-direction:column;gap:16px}
+.lockbg{background:radial-gradient(120% 70% at 50% 0%,var(--band),var(--bg) 70%)}
+.obdots{display:flex;gap:6px;justify-content:center}.obdots i{width:22px;height:4px;border-radius:2px;background:var(--line)}.obdots i.on{background:var(--aqua)}
+.big{font-family:var(--f-display);font-size:26px;font-weight:600;line-height:1.2;margin:0;text-wrap:balance}
+.check{display:flex;gap:10px;align-items:center;padding:11px 12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-size:13.5px}
+.check .st{margin-left:auto;font-size:12px;font-weight:700}
+.oauth{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.oauth .hd{background:#fff;color:#000;padding:12px 14px;font-weight:800;letter-spacing:.02em;display:flex;justify-content:space-between;align-items:center}
+.oauth .bd{padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--surface)}
+.widgets{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:start}
+@media (max-width:380px){.widgets{grid-template-columns:1fr}}
+.wg{border-radius:22px;padding:14px;background:linear-gradient(160deg,#101a2c,#05080e);border:1px solid var(--line);display:flex;flex-direction:column;gap:6px;min-width:0}
+.wg.sm{aspect-ratio:1/1;max-width:100%}
+.lock{border-radius:28px;padding:22px 14px 16px;background:radial-gradient(100% 60% at 50% 0%,#24305a,#06090F 75%);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:12px}
+.lock .time{font-family:var(--f-display);font-size:52px;font-weight:600;line-height:1}
+.island{background:#000;border-radius:999px;padding:6px 8px 6px 6px;display:flex;align-items:center;gap:8px;font-size:12px;min-width:170px;justify-content:space-between}
+.island .o{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--aqua),var(--indigo))}
+.la{width:100%;background:rgba(20,26,40,.75);backdrop-filter:blur(10px);border-radius:20px;padding:13px;display:flex;flex-direction:column;gap:10px}
+.qa{background:rgba(30,38,56,.95);border-radius:14px;overflow:hidden;width:100%}
+.qa button{display:flex;justify-content:space-between;width:100%;padding:12px 14px;border-top:1px solid rgba(255,255,255,.07);font-size:14px}
+.qa button:first-child{border-top:0}
+.appicon{width:60px;height:60px;border-radius:15px;background:linear-gradient(140deg,var(--indigo),var(--aqua));display:grid;place-items:center;font-family:var(--f-display);font-weight:800;color:#06090F}
+.sharecard{border-radius:20px;padding:18px;background:radial-gradient(120% 80% at 100% 0%,color-mix(in srgb,var(--indigo) 45%,transparent),transparent 60%),linear-gradient(160deg,#0f1930,#05080e);border:1px solid color-mix(in srgb,var(--aqua) 30%,var(--line));display:flex;flex-direction:column;gap:8px}
+.sharecard .pct{font-family:var(--f-num);font-weight:600;font-size:44px;letter-spacing:-.02em;line-height:1}
+.lb{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.lb:first-child{border-top:0}
+.lb .rk{font-family:var(--f-num);color:var(--muted);font-weight:600}
+.lb .rk.top{color:var(--gold)}
+.post{display:flex;flex-direction:column;gap:8px}
+.post .who{display:flex;gap:10px;align-items:center}
+.post .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;background:var(--surface-2);color:var(--aqua)}
+.post .acts{display:flex;gap:16px;color:var(--muted);font-size:12.5px}
+.vote{display:grid;grid-template-columns:1fr auto 70px;gap:10px;align-items:center;font-size:12.5px}
+.vbar{height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden}.vbar i{display:block;height:100%}
+.bars{display:flex;flex-direction:column;gap:8px}
+.listen{display:flex;align-items:center;gap:3px;height:20px}.listen i{width:3px;border-radius:2px;background:var(--aqua);animation:wave .7s ease-in-out infinite alternate}
+@keyframes wave{from{height:4px}to{height:20px}}
+.mic{width:44px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;flex:none}
+.mic svg{width:18px;height:18px;stroke:var(--aqua);fill:none;stroke-width:1.9;stroke-linecap:round}
+.topup{font-size:12px;font-weight:700;color:var(--aqua);border:1px solid color-mix(in srgb,var(--aqua) 50%,transparent);border-radius:8px;padding:6px 10px;margin-top:8px}
+.ack{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45}
+.ack input{width:18px;height:18px;accent-color:var(--aqua);margin-top:2px;flex:none}
+.disc{font-size:12.5px;color:var(--muted);line-height:1.55;display:flex;flex-direction:column;gap:8px}
+.disc b{color:var(--fg)}
+.posrow{cursor:pointer}
+/* Login (light, matches mx1trade.com sign-in) */
+.login{position:fixed;inset:0;z-index:60;overflow-y:auto;background:#EEF2F9;color:#0F1A2E;color-scheme:light;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(env(safe-area-inset-top,0px) + 24px) calc(env(safe-area-inset-bottom,0px) + 24px);display:flex;justify-content:center;align-items:flex-start}
+.lg-card{width:100%;max-width:420px;background:#fff;border-radius:22px;box-shadow:0 10px 40px rgba(30,50,90,.10);padding:0 24px 22px;display:flex;flex-direction:column;align-items:center;gap:16px;position:relative;margin-block:auto}
+.lg-card::before{content:"";position:absolute;top:0;left:22px;right:22px;height:3px;border-radius:0 0 3px 3px;background:linear-gradient(90deg,#3D6FD6,#4FB3C4,#48A08A)}
+.lg-logo{width:120px;margin-top:40px;display:block}
+.lg-status{display:inline-flex;align-items:center;gap:8px;background:#E6F5F0;color:#2E9A7B;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600}
+.lg-status i{width:7px;height:7px;border-radius:50%;background:#2E9A7B}
+.lg-h{font-family:"Source Serif 4",Georgia,serif;font-weight:500;font-size:28px;margin:6px 0 0;text-align:center;text-wrap:balance;color:#0F1A2E}
+.lg-sub{text-align:center;font-size:13.5px;line-height:1.6;color:#8A96AC;margin-top:-8px}
+.lg-sub b{display:block;color:#3A4558;font-weight:500}
+.lg-grad{background:linear-gradient(90deg,#3D6FD6,#4FB3C4 55%,#48A08A);color:#fff}
+.lg-seg{width:100%;display:grid;grid-template-columns:1fr 1fr;border:1px solid #DCE3EE;border-radius:12px;background:#F4F6FB;overflow:hidden}
+.lg-seg button{padding:11px 0;font-size:15px;color:#8A96AC;font-weight:500;border-radius:11px}
+.lg-seg button[aria-pressed="true"]{background:linear-gradient(90deg,#3D6FD6,#4FB3C4 55%,#48A08A);color:#fff}
+.lg-venue{width:100%;border-radius:12px;padding:11px 0;text-align:center;font-size:15px;font-weight:500}
+.lg-okx{width:100%;margin-top:6px;background:#0F1A2E;color:#fff;border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;font-size:17px;font-weight:600}
+.lg-okx .ob{background:linear-gradient(140deg,#4FB3C4,#3D6FD6);border-radius:8px;padding:6px 10px;font-size:13px;font-weight:800;letter-spacing:.06em}
+.lg-okx .ch{margin-left:auto;opacity:.7;font-size:20px}
+.lg-okx:disabled{opacity:.7}
+.lg-note{width:100%;border:1px solid #DCE3EE;background:#F6F8FC;border-radius:14px;padding:14px;text-align:center;font-size:13px;line-height:1.6;color:#8A96AC}
+.lg-note button{color:#3BA5BD;font-weight:600;font-size:13px}
+.lg-link{color:#8A96AC;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.lg-foot{width:100%;border-top:1px solid #E6EAF2;padding-top:16px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap}
+.lg-foot button{color:#8A96AC;font-size:12.5px}
+.lg-panel{width:100%;border:1px solid #DCE3EE;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.55;color:#3A4558;text-align:left}
+.lg-panel b{color:#0F1A2E}
+.lg-panel .x{align-self:flex-end;color:#8A96AC;font-size:12.5px}
+.lg-spin{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lg-card button:focus-visible{outline:2px solid #3D6FD6;outline-offset:2px}
+/* Portfolio tables */
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{text-align:left;font-weight:600;color:var(--muted);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:0 0 8px}
+.tbl td{padding:9px 0;border-top:1px solid var(--line)}
+.tbl td.r,.tbl th.r{text-align:right}
+.alloc{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:10px 0 12px}
+
+/* Mariah chat */
+.chat{display:flex;flex-direction:column;gap:10px}
+.msg{max-width:86%;padding:10px 13px;border-radius:14px;line-height:1.5;font-size:13.5px}
+.msg.ai{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.me{background:var(--indigo);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+.typing span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:3px;animation:b 1s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes b{50%{opacity:.2}}
+.composer{position:fixed;left:0;right:0;bottom:calc(68px + env(safe-area-inset-bottom,0px));z-index:6}
+.composer form{max-width:460px;margin:0 auto;display:flex;gap:8px;background:var(--bg);border-top:1px solid var(--line);
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:10px}
+.composer input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);color:var(--fg);border-radius:12px;padding:11px 13px;font:inherit}
+.send{background:var(--aqua);color:#06090F;font-weight:700;border-radius:12px;padding:0 16px}
+.sugs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.sugs .chip{white-space:nowrap}
+
+/* Tab bar */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:7;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .in{max-width:460px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);
+  padding-left:max(4px,env(safe-area-inset-left,0px));padding-right:max(4px,env(safe-area-inset-right,0px))}
+nav.tabs a{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 9px;color:var(--dim);text-decoration:none;font-size:10.5px;font-weight:600;letter-spacing:.02em}
+nav.tabs a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs a[aria-current="page"]{color:var(--aqua)}
+
+/* Sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:460px;background:var(--surface);border-top:1px solid var(--line);border-radius:20px 20px 0 0;
+  padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));
+  display:flex;flex-direction:column;gap:12px;animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:0}}
+.sheet h3{font-family:var(--f-display);margin:0;font-size:18px}
+.sheet p{margin:0;color:var(--muted);line-height:1.5}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);
+  padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;z-index:30;white-space:nowrap}
+.foot{color:var(--dim);font-size:11px;line-height:1.5;text-align:center;padding-top:4px}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="mark">MX1</div>
+      <div><b>MX1 Trade</b><small id="hdrSub">Fusion online</small></div>
+    </div>
+    <div class="row" style="gap:8px"><div class="venue"><span class="dot" id="venueDot"></span>OKX <span class="demo">Demo</span></div><button class="iconbtn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4"/></svg><span class="badge" id="badge" hidden></span></button></div>
+  </header>
+
+  <main id="main">
+    <!-- LIVE -->
+    <section class="view" id="v-live">
+      <div class="card hero">
+        <div class="row"><span class="label">Total equity</span><span class="label num" id="clock"></span></div>
+        <div class="eq" id="eq">$0</div>
+        <div class="pnlline">
+          <span>Today <b class="num" id="pnlDay"></b></span>
+          <span>Unrealized <b class="num" id="pnlU"></b></span>
+        </div>
+        <canvas class="spark" id="spark" aria-label="Equity chart"></canvas>
+        <div class="chips" role="group" aria-label="Timeframe">
+          <button class="chip live" data-tf="live" aria-pressed="true">● Live</button>
+          <button class="chip" data-tf="1D" aria-pressed="false">1D</button>
+          <button class="chip" data-tf="1W" aria-pressed="false">1W</button>
+          <button class="chip" data-tf="1M" aria-pressed="false">1M</button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="label">Realized</div><div class="v" id="sReal"></div></div>
+        <div class="stat"><div class="label">Open pos.</div><div class="v" id="sOpen"></div></div>
+        <div class="stat"><div class="label">Volume 24h</div><div class="v" id="sVol"></div></div>
+      </div>
+
+      <button class="card row" id="recapCard" style="text-align:left;width:100%">
+        <div><span class="label">Weekly recap · Nov 2 – 8</span><div style="margin-top:4px;font-size:13.5px"><b>58 trades</b> · <b class="num up">+$4,812.40</b> · 61% win</div></div><span class="chev" style="color:var(--aqua);font-size:18px">›</span></button>
+
+      <div class="card stack">
+        <div class="engine">
+          <div class="orb" id="orb"></div>
+          <div style="flex:1;min-width:0">
+            <div class="row"><b style="font-family:var(--f-display);font-size:16px">Fusion</b><span class="tag" id="engState">Online</span></div>
+            <div style="color:var(--muted);font-size:12.5px;margin-top:3px" id="engSub"></div>
+          </div>
+        </div>
+        <div class="btns">
+          <a class="btn" href="#manual" style="text-align:center;text-decoration:none;color:var(--fg)">Manual Trade</a>
+          <a class="btn" href="#auto" style="text-align:center;text-decoration:none;color:var(--fg)">Auto Autonomous</a>
+        </div>
+        <button class="kill" id="killBtn">Kill switch · Stop all trading</button>
+      </div>
+
+      <div class="card">
+        <div class="row" style="margin-bottom:6px"><span class="label">Engine activity</span><span class="label" style="color:var(--aqua)">Live</span></div>
+        <div class="feed" id="feed"></div>
+      </div>
+    </section>
+
+    <!-- TRADE -->
+    <section class="view" id="v-trade" hidden>
+      <div class="seg mode" role="group" aria-label="Trading mode">
+        <button data-mode="manual" aria-pressed="true">Manual Trade</button>
+        <button data-mode="auto" aria-pressed="false">Auto Autonomous</button>
+      </div>
+      <div class="row">
+        <div class="mini-seg" role="group" aria-label="Venue">
+          <button data-rail="CEX" aria-pressed="true">CEX</button><button data-rail="DEX" aria-pressed="false">DEX</button>
+        </div>
+        <span class="tag">CEX · USDT <b class="num" style="color:var(--fg)" id="availTop"></b></span>
+      </div>
+
+      <!-- Manual -->
+      <div class="panel" id="p-manual">
+        <div class="card">
+          <div class="pairbar">
+            <select class="in" id="mPair" aria-label="Pair"></select>
+            <span class="px" id="mPx"></span><span class="num" id="mChg" style="font-size:13px"></span>
+          </div>
+          <div class="chips" role="group" aria-label="Chart timeframe" style="margin-top:10px">
+            <button class="chip" data-ctf="1m" aria-pressed="false">1m</button>
+            <button class="chip" data-ctf="5m" aria-pressed="false">5m</button>
+            <button class="chip" data-ctf="15m" aria-pressed="false">15m</button>
+            <button class="chip" data-ctf="1h" aria-pressed="true">1h</button>
+            <button class="chip" data-ctf="4h" aria-pressed="false">4h</button>
+            <button class="chip" data-ctf="1d" aria-pressed="false">1d</button>
+          </div>
+          <div class="ohlc" id="ohlc"></div>
+          <canvas class="candles" id="candles" aria-label="Price chart"></canvas>
+          <div class="hint" style="margin-top:6px">Auto-routing: spot → platform wallet · perp/swap → external wallet</div>
+        </div>
+
+        <div class="card stack">
+          <div><b style="font-family:var(--f-display);font-size:16px">Fusion configuration</b><div class="hint">Tune the analysis, then run a Fusion cycle.</div></div>
+          <div class="grid2">
+            <div class="field"><label class="label" for="fTf">Timeframe</label>
+              <select class="in" id="fTf"><option>15m</option><option selected>1h</option><option>4h</option><option>1d</option></select></div>
+            <div class="field"><label class="label" for="fDays">Days to analyse</label><input class="in" id="fDays" type="number" min="1" max="90" value="7" inputmode="numeric"></div>
+          </div>
+          <div class="field"><label class="label" for="fAmt">Trade amount (USDT)</label><input class="in" id="fAmt" type="number" min="0" value="100" inputmode="decimal"></div>
+          <div class="qchips"><button data-q=".25">25%</button><button data-q=".5">50%</button><button data-q=".75">75%</button><button data-q="1">Max</button></div>
+          <div class="row hint"><span>Min trade amount: <b style="color:var(--fg)">$50</b></span><span id="fAvail"></span></div>
+          <div class="alert" id="fErr" hidden></div>
+          <span class="label">Risk tolerance</span>
+          <div class="seg" role="group" aria-label="Risk tolerance">
+            <button data-frisk="Low" aria-pressed="false">Low</button><button data-frisk="Med" aria-pressed="true">Med</button><button data-frisk="High" aria-pressed="false">High</button>
+          </div>
+          <div class="row"><label class="label" for="fLev">Max leverage</label><b class="num" id="fLevV">5×</b></div>
+          <input type="range" id="fLev" min="1" max="20" value="5">
+          <button class="primary" id="runFusion">Run Fusion Cycle</button>
+        </div>
+
+        <div id="fResult"></div>
+
+        <div class="card">
+          <div class="row" style="margin-bottom:8px">
+            <span class="label">Open positions <span class="num" id="posCount"></span></span>
+            <button class="xbtn" id="closeAll">Close all</button>
+          </div>
+          <div class="chips" role="group" aria-label="Position type" style="margin-bottom:6px">
+            <button class="chip" data-pf="All" aria-pressed="true">All</button>
+            <button class="chip" data-pf="Spot" aria-pressed="false">Spot</button>
+            <button class="chip" data-pf="Futures" aria-pressed="false">Futures</button>
+          </div>
+          <div id="posList"></div>
+        </div>
+      </div>
+
+      <!-- Auto -->
+      <div class="panel" id="p-auto" hidden>
+        <div class="card row">
+          <div><b style="font-family:var(--f-display);font-size:16px">AI Autonomous Trading</b><div class="hint" id="autoHint"></div></div>
+          <span class="spill" id="autoPill"><span class="dot idle"></span>Inactive</span>
+        </div>
+        <div id="autoBody"></div>
+      </div>
+    </section>
+
+    <!-- SIGNALS -->
+    <section class="view" id="v-signals" hidden>
+      <div class="row"><h2 class="vt">Signals</h2><span class="tag" id="sigCount"></span></div>
+      <div class="chips" role="group" aria-label="Filter signals">
+        <button class="chip" data-sf="ALL" aria-pressed="true">All</button>
+        <button class="chip" data-sf="BUY" aria-pressed="false">Buy</button>
+        <button class="chip" data-sf="SELL" aria-pressed="false">Sell</button>
+        <button class="chip" data-sf="HOLD" aria-pressed="false">Hold</button>
+      </div>
+      <div class="stack" id="sigList"></div>
+    </section>
+
+    <!-- PORTFOLIO -->
+    <section class="view" id="v-portfolio" hidden>
+      <h2 class="vt">Portfolio</h2>
+      <div class="card">
+        <span class="label">Asset balances</span>
+        <div class="alloc" id="alloc"></div>
+        <table class="tbl" id="balTbl"></table>
+      </div>
+      <div class="card" style="overflow-x:auto">
+        <span class="label">Open positions</span>
+        <table class="tbl" style="margin-top:8px" id="posTbl"></table>
+      </div>
+      <div class="card">
+        <div class="row" style="margin-bottom:8px"><span class="label">Trade history</span>
+          <div class="chips" role="group" aria-label="History period">
+            <button class="chip" data-hp="7" aria-pressed="true">7D</button>
+            <button class="chip" data-hp="30" aria-pressed="false">30D</button>
+          </div></div>
+        <table class="tbl" id="histTbl"></table>
+      </div>
+    </section>
+
+    <!-- MARIAH -->
+    <section class="view" id="v-mariah" hidden>
+      <div class="engine"><div class="orb"></div><div><b style="font-family:var(--f-display);font-size:18px">Mariah</b><div style="color:var(--muted);font-size:12.5px">Your trading assistant</div></div></div>
+      <div class="sugs" id="sugs">
+        <button class="chip">How am I doing today?</button>
+        <button class="chip">Why did you buy SOL?</button>
+        <button class="chip">What's my risk right now?</button>
+        <button class="chip">Pause trading</button>
+      </div>
+      <div class="chat" id="chat"></div>
+      <div style="height:64px"></div>
+    </section>
+
+    <!-- MORE -->
+    <section class="view" id="v-more" hidden>
+      <div class="card row" style="background:linear-gradient(120deg,var(--band),var(--surface))">
+        <div class="row" style="justify-content:flex-start;gap:12px;min-width:0"><div class="avatar">MT</div>
+          <div style="min-width:0"><b style="font-family:var(--f-display);font-size:16px">MX1 Trade</b><div class="hint num" style="overflow:hidden;text-overflow:ellipsis">UID okx_8562744325021046</div></div></div>
+        <span class="spill on" id="kycPill"><span class="dot"></span>Verified</span>
+      </div>
+      <div class="menu" id="moreMenu"></div>
+      <div class="card stack">
+        <span class="label">Demo controls</span>
+        <div class="row"><div><b style="font-size:13.5px">Simulate low balance</b><div class="hint">Sets available USDT to $13.98 to test top-up</div></div><button class="switch" role="switch" aria-checked="false" id="lowBal" aria-label="Simulate low balance"></button></div>
+        <div class="btns"><button class="btn" id="demoPush">Send test push</button><button class="btn" id="demoLock">Lock app</button></div>
+        <button class="btn" id="demoOb">Preview onboarding</button>
+      </div>
+    </section>
+
+    <!-- COMMUNITY -->
+    <section class="view" id="v-community" hidden>
+      <div class="row"><a class="back" href="#more">‹ More</a></div>
+      <h2 class="vt">Community</h2>
+      <div class="seg" style="--n:2" role="group" aria-label="Community view"><button data-cv="board" aria-pressed="true">Leaderboard</button><button data-cv="feed" aria-pressed="false">Feed</button></div>
+      <div id="commBody"></div>
+    </section>
+
+    <!-- REFERRALS -->
+    <section class="view" id="v-referrals" hidden>
+      <div class="row"><a class="back" href="#more">‹ More</a></div>
+      <h2 class="vt">Refer &amp; earn</h2>
+      <div id="refBody"></div>
+    </section>
+
+    <!-- SECURITY -->
+    <section class="view" id="v-security" hidden>
+      <div class="row"><a class="back" href="#more">‹ More</a></div>
+      <h2 class="vt">Security center</h2>
+      <div id="secBody"></div>
+    </section>
+
+    <!-- WIDGETS -->
+    <section class="view" id="v-widgets" hidden>
+      <div class="row"><a class="back" href="#more">‹ More</a></div>
+      <h2 class="vt">Widgets &amp; Live Activity</h2>
+      <div class="hint">Previews of what sits on your home screen and lock screen. They update live and the buttons work.</div>
+      <div id="wBody"></div>
+    </section>
+
+    <!-- ALERTS -->
+    <section class="view" id="v-alerts" hidden>
+      <div class="row"><a class="back" href="#more">‹ More</a></div>
+      <h2 class="vt">Notifications</h2>
+      <div id="alBody"></div>
+    </section>
+
+    <p class="foot">Prototype with demo data. Not connected to a live account. Past performance does not guarantee future results.</p>
+  </main>
+</div>
+
+<div class="composer" id="composer" hidden>
+  <form id="chatForm"><button type="button" class="mic" id="mic" aria-label="Talk to Mariah"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><input id="chatIn" autocomplete="off" placeholder="Ask Mariah…" aria-label="Message Mariah"><button class="send" type="submit">Send</button></form>
+</div>
+
+<nav class="tabs" aria-label="Main">
+  <div class="in">
+    <a href="#live" data-tab="live"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Live</a>
+    <a href="#trade" data-tab="trade"><svg viewBox="0 0 24 24"><path d="M7 3v4M7 17v4M17 3v6M17 19v2"/><rect x="5" y="7" width="4" height="10" rx="1"/><rect x="15" y="9" width="4" height="10" rx="1"/></svg>Trade</a>
+    <a href="#signals" data-tab="signals"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Signals</a>
+    <a href="#portfolio" data-tab="portfolio"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4h8v2M3 12h18"/></svg>Portfolio</a>
+    <a href="#more" data-tab="more"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>More</a>
+  </div>
+</nav>
+
+<a class="fab" id="fab" href="#mariah" aria-label="Ask Mariah"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></svg></a>
+<div id="bannerHost"></div>
+<div id="sheetHost"></div>
+<div id="toastHost"></div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const fmt=(n,d=2)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const usd=(n,d=2)=>(n<0?'-$':'$')+fmt(Math.abs(n),d);
+const sgn=(n,d=2)=>(n>=0?'+':'-')+'$'+fmt(Math.abs(n),d);
+const pd=v=>v<1?4:v<10?3:2;
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const S={running:true,tf:'live',sf:'ALL',hp:7,mode:'manual',rail:'CEX',
+  equity:248350.42,start:245912.10,real:1784.55,vol:1286400,live:[],signals:[],
+  usdt:61240.18,
+  m:{pair:'BTC-USDT',ctf:'1h',risk:'Med',lev:5,amt:100,pf:'All',result:null,running:false},
+  a:{active:false,enabled:false,wizard:false,step:1,since:new Date(),
+     pairs:{BTC:{b:100,l:5},ETH:{b:100,l:5},SOL:{b:100,l:5},XRP:{b:100,l:5},DOGE:{b:100,l:5}},
+     risk:'Medium',mlt:3,mdl:6,mps:3,mpt:8,strat:'Short',cycles:125,cdt:5,cdl:10,reset:'00:00',tml:true,ap:false}};
+
+// ---------- prices / positions ----------
+const px={BTC:97240,ETH:3612,SOL:212.4,XRP:2.31,DOGE:0.384,ADA:1.02,BNB:690,AVAX:41.2};
+const open0={...px};
+const positions=[
+  {p:'BTC-USDT',side:'Long',type:'Futures',lev:5,size:0.85,entry:96410,src:'Auto',tp:99800,sl:94900},
+  {p:'ETH-USDT',side:'Long',type:'Futures',lev:5,size:12,entry:3571,src:'Auto',tp:3720,sl:3540},
+  {p:'SOL-USDT',side:'Long',type:'Spot',lev:1,size:180,entry:208.9,src:'Auto',tp:219,sl:203.5},
+  {p:'XRP-USDT',side:'Short',type:'Futures',lev:5,size:9000,entry:2.338,src:'Auto',tp:2.24,sl:2.39}];
+const base=p=>p.split('-')[0];
+const upnl=pos=>{const c=px[base(pos.p)];return (pos.side==='Long'?c-pos.entry:pos.entry-c)*pos.size};
+const totalU=()=>positions.reduce((a,b)=>a+upnl(b),0);
+
+// ---------- equity series ----------
+function seeded(n,start,vol,drift){let v=start,a=[];for(let i=0;i<n;i++){v+=(Math.random()-.48+drift)*vol;a.push(v)}return a}
+for(let i=0;i<90;i++)S.live.push(S.equity-(90-i)*6+(Math.random()-.5)*120);
+const series={'1D':seeded(96,S.start,320,0.03),'1W':seeded(84,239800,900,0.06),'1M':seeded(90,221500,1600,0.08)};
+Object.values(series).forEach(a=>a.push(S.equity));
+
+function canvasCtx(c){const r=c.getBoundingClientRect(),dpr=devicePixelRatio||1;if(!r.width)return null;
+  c.width=r.width*dpr;c.height=r.height*dpr;const g=c.getContext('2d');g.scale(dpr,dpr);return [g,r.width,r.height]}
+function draw(){
+  const k=canvasCtx($('#spark'));if(!k)return;const [g,w,h]=k;
+  const d=S.tf==='live'?S.live:series[S.tf];const pad=8;
+  const mn=Math.min(...d),mx=Math.max(...d),sp=(mx-mn)||1;
+  const X=i=>i/(d.length-1)*(w-12),Y=v=>pad+(1-(v-mn)/sp)*(h-pad*2);
+  g.strokeStyle=css('--line');g.lineWidth=1;
+  for(let i=1;i<4;i++){g.beginPath();g.moveTo(0,h*i/4);g.lineTo(w,h*i/4);g.stroke()}
+  const col=d[d.length-1]>=d[0]?css('--aqua'):css('--down');
+  const grd=g.createLinearGradient(0,0,0,h);grd.addColorStop(0,col+'40');grd.addColorStop(1,col+'00');
+  g.beginPath();d.forEach((v,i)=>i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v)));
+  g.lineTo(X(d.length-1),h);g.lineTo(0,h);g.closePath();g.fillStyle=grd;g.fill();
+  g.beginPath();d.forEach((v,i)=>i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v)));
+  g.strokeStyle=col;g.lineWidth=2;g.lineJoin='round';g.stroke();
+  const lx=X(d.length-1),ly=Y(d[d.length-1]);
+  g.beginPath();g.arc(lx,ly,7,0,7);g.fillStyle=col+'33';g.fill();
+  g.beginPath();g.arc(lx,ly,3.5,0,7);g.fillStyle=col;g.fill();
+}
+
+// ---------- candles ----------
+const cache={};
+const tfVol={'1m':.0015,'5m':.003,'15m':.005,'1h':.009,'4h':.016,'1d':.03};
+function candles(){const key=S.m.pair+S.m.ctf;const b=base(S.m.pair);
+  if(!cache[key]){const v=tfVol[S.m.ctf];let c=px[b]*(1+(Math.random()-.5)*v*12);const a=[];
+    for(let i=0;i<56;i++){const o=c;c=o*(1+(Math.random()-.49)*v);const hi=Math.max(o,c)*(1+Math.random()*v*.5),lo=Math.min(o,c)*(1-Math.random()*v*.5);a.push({o,h:hi,l:lo,c})}
+    const last=a[a.length-1];last.c=px[b];last.h=Math.max(last.h,last.c);last.l=Math.min(last.l,last.c);cache[key]=a}
+  return cache[key]}
+function drawCandles(){
+  const k=canvasCtx($('#candles'));if(!k)return;const [g,w,h]=k;const d=candles();
+  const axis=58,cw=(w-axis)/d.length;const mn=Math.min(...d.map(x=>x.l)),mx=Math.max(...d.map(x=>x.h)),sp=mx-mn||1;
+  const Y=v=>6+(1-(v-mn)/sp)*(h-12);const dec=pd(mx);
+  g.font='10px "IBM Plex Mono", monospace';g.textAlign='left';g.textBaseline='middle';
+  for(let i=0;i<=4;i++){const v=mn+sp*i/4,y=Y(v);g.strokeStyle=css('--line');g.lineWidth=1;g.beginPath();g.moveTo(0,y);g.lineTo(w-axis,y);g.stroke();
+    g.fillStyle=css('--dim');g.fillText(fmt(v,dec),w-axis+6,Math.min(Math.max(y,8),h-8))}
+  d.forEach((c,i)=>{const x=i*cw+cw/2,col=c.c>=c.o?css('--up'):css('--down');g.strokeStyle=col;g.fillStyle=col;
+    g.beginPath();g.moveTo(x,Y(c.h));g.lineTo(x,Y(c.l));g.stroke();
+    const top=Y(Math.max(c.o,c.c)),bh=Math.max(1,Math.abs(Y(c.o)-Y(c.c)));g.fillRect(x-cw*.32,top,cw*.64,bh)});
+  const last=d[d.length-1],ly=Y(last.c),col=last.c>=last.o?css('--up'):css('--down');
+  g.setLineDash([3,3]);g.strokeStyle=col;g.beginPath();g.moveTo(0,ly);g.lineTo(w-axis,ly);g.stroke();g.setLineDash([]);
+  g.fillStyle=col;g.fillRect(w-axis+2,ly-9,axis-2,18);g.fillStyle='#06090F';g.fillText(fmt(last.c,dec),w-axis+6,ly);
+  $('#ohlc').innerHTML=`<span>O ${fmt(last.o,dec)}</span><span>H ${fmt(last.h,dec)}</span><span>L ${fmt(last.l,dec)}</span><span>C ${fmt(last.c,dec)}</span>`;
+}
+function renderPx(){const b=base(S.m.pair),v=px[b],ch=(v/open0[b]-1)*100;
+  $('#mPx').textContent='$'+fmt(v,pd(v));$('#mChg').textContent=(ch>=0?'+':'')+ch.toFixed(2)+'%';$('#mChg').className='num '+(ch>=0?'up':'down')}
+
+// ---------- live ----------
+let lastEq=S.equity;
+function renderLive(){
+  const e=$('#eq');const [w,c]=fmt(S.equity).split('.');
+  e.innerHTML='$'+w+'<span class="c">.'+c+'</span>';
+  if(S.equity!==lastEq){e.classList.remove('flash-up','flash-down');void e.offsetWidth;e.classList.add(S.equity>lastEq?'flash-up':'flash-down');lastEq=S.equity}
+  const day=S.equity-S.start,u=totalU();
+  $('#pnlDay').textContent=sgn(day)+' ('+(day/S.start*100).toFixed(2)+'%)';$('#pnlDay').className='num '+(day>=0?'up':'down');
+  $('#pnlU').textContent=sgn(u);$('#pnlU').className='num '+(u>=0?'up':'down');
+  $('#sReal').textContent=sgn(S.real,0);$('#sReal').className='v '+(S.real>=0?'up':'down');
+  $('#sVol').textContent='$'+(S.vol/1e6).toFixed(2)+'M';
+  $('#sOpen').textContent=positions.length;
+  draw();
+}
+const feedLines=[
+  ['Risk','Exposure check passed · 38% of limit'],['Signal','BTC regime: trending up, conviction 0.71'],
+  ['Execution','OCO set on ETH-USDT · TP 3,720 / SL 3,540'],['Market Structure','SOL order book bid-heavy at 211'],
+  ['Meta','Fusion weights rebalanced · 60/40'],['Regime & Macro','DXY softening, risk-on bias held'],
+  ['Execution','Trailing stop moved on BTC-USDT'],['Guardrail','Drawdown 2.1% vs 20% guard'],['Signal','XRP short thesis intact']];
+const feed=[];
+function pushFeed(a,t){feed.unshift({a,t,ts:new Date()});feed.length=Math.min(feed.length,7);renderFeed()}
+function renderFeed(){$('#feed').innerHTML=feed.map((f,i)=>`<div class="it${i===0?' new':''}"><span class="t">${f.ts.toTimeString().slice(0,5)}</span><span><span class="agent">${f.a}</span> · ${f.t}</span></div>`).join('')}
+
+// ---------- signals ----------
+const pairs=['BTC-USDT','ETH-USDT','SOL-USDT','XRP-USDT','DOGE-USDT','AVAX-USDT'];
+const srcs=['TradingView','Fusion'];
+function mkSig(ago){const a=Math.random()<.45?'BUY':Math.random()<.55?'SELL':'HOLD';const p=pairs[Math.floor(Math.random()*pairs.length)];
+  return {a,p,c:Math.round(55+Math.random()*40),src:srcs[Math.floor(Math.random()*2)],tf:['15m','1h','4h'][Math.floor(Math.random()*3)],ts:Date.now()-ago,px:px[base(p)]}}
+for(let i=0;i<9;i++)S.signals.push(mkSig(i*7*60000+Math.random()*120000));
+const ago=t=>{const s=Math.round((Date.now()-t)/1000);return s<60?s+'s ago':s<3600?Math.round(s/60)+'m ago':Math.round(s/3600)+'h ago'};
+function renderSignals(fresh){
+  const list=S.signals.filter(s=>S.sf==='ALL'||s.a===S.sf);
+  $('#sigCount').textContent=S.signals.length+' today';
+  $('#sigList').innerHTML=list.map((s,i)=>`<div class="card sig${fresh&&i===0?' new':''}"><span class="pill ${s.a}">${s.a}</span>
+    <div style="min-width:0"><div class="pair">${base(s.p)}<span style="color:var(--dim);font-size:12px;font-weight:500"> /USDT</span></div>
+    <div class="meta">${s.src} · ${s.tf} · ${ago(s.ts)}</div></div>
+    <div style="text-align:right"><div class="num" style="font-size:13px">${usd(s.px,pd(s.px))}</div><div class="conf"><i style="width:${s.c}%"></i></div><div class="num" style="font-size:10.5px;color:var(--muted);margin-top:3px">${s.c}% conf.</div></div></div>`).join('')
+    ||'<div class="card" style="color:var(--muted)">No signals in this filter yet.</div>';
+}
+
+// ---------- engine state ----------
+function setEngine(){
+  const a=S.a.active&&S.running;
+  $('#orb').classList.toggle('stopped',!S.running);
+  $('#engState').textContent=!S.running?'Stopped':'Online';
+  $('#engState').style.color=!S.running?'var(--down)':'var(--up)';
+  $('#engSub').textContent=!S.running?'Kill switch engaged · positions closed':a?`Auto Autonomous running · ${Object.keys(S.a.pairs).length} pairs`:'Auto Autonomous off · manual only';
+  $('#hdrSub').textContent=!S.running?'Kill switch on':a?'AI Auto on':'Fusion online';
+  const k=$('#killBtn');k.classList.toggle('resume',!S.running);k.textContent=S.running?'Kill switch · Stop all trading':'Resume trading';
+  $('#venueDot').className='dot'+(S.running?'':' off');
+}
+function toast(t){$('#toastHost').innerHTML=`<div class="toast" role="status">${t}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>$('#toastHost').innerHTML='',2200)}
+function sheet(title,body,okText,onOk){
+  $('#sheetHost').innerHTML=`<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh">
+  <h3 id="sh">${title}</h3><p>${body}</p>
+  <div class="btns"><button class="btn" id="cx">Cancel</button><button class="btn danger" id="ok">${okText}</button></div></div></div>`;
+  const close=()=>$('#sheetHost').innerHTML='';
+  $('#cx').onclick=close;$('#scrim').onclick=e=>{if(e.target.id==='scrim')close()};
+  $('#ok').onclick=()=>{close();onOk()};$('#ok').focus();
+}
+function closePos(list){list.forEach(p=>{const u=upnl(p);if(tick.u!==undefined)tick.u-=u;S.real+=u;S.usdt+=p.size*p.entry/p.lev+u;positions.splice(positions.indexOf(p),1)})}
+$('#killBtn').onclick=()=>{
+  if(S.running)sheet('Stop all trading?',`Fusion will cancel open orders and close ${positions.length} positions at market on OKX. Auto Autonomous stays off until you resume.`,'Stop trading',()=>bio('Stop all trading',()=>{const n=positions.length;
+    closePos([...positions]);S.running=false;S.a.active=false;setEngine();renderAll();pushFeed('Kill Switch','All orders cancelled, positions closed');push('kill','Kill switch activated',`All orders cancelled and ${n} positions closed`,'live')}));
+  else{S.running=true;setEngine();renderAll();pushFeed('Guardrail','Trading resumed by user');push('kill','Trading resumed','Fusion is online. Auto Autonomous is off until you launch it.','auto')}};
+
+// ---------- MANUAL TRADE ----------
+$('#mPair').innerHTML=Object.keys(px).map(b=>`<option value="${b}-USDT">${b}/USDT</option>`).join('');
+$('#mPair').onchange=e=>{S.m.pair=e.target.value;S.m.result=null;renderPx();drawCandles();renderResult()};
+$$('[data-ctf]').forEach(b=>b.onclick=()=>{S.m.ctf=b.dataset.ctf;$$('[data-ctf]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));drawCandles()});
+$$('[data-q]').forEach(b=>b.onclick=()=>{$('#fAmt').value=Math.floor(S.usdt*+b.dataset.q);validateAmt()});
+$('#fAmt').oninput=validateAmt;
+$$('[data-frisk]').forEach(b=>b.onclick=()=>{S.m.risk=b.dataset.frisk;$$('[data-frisk]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))});
+$('#fLev').oninput=e=>{S.m.lev=+e.target.value;$('#fLevV').textContent=S.m.lev+'×'};
+function validateAmt(){const v=+$('#fAmt').value||0;S.m.amt=v;let err='';
+  if(v<50)err='<b>Below minimum</b><div class="hint" style="color:var(--fg)">Enter at least $50.</div>';
+  else if(v>S.usdt)err=`<b>Insufficient balance</b><div class="hint" style="color:var(--fg)">Available ${usd(S.usdt)} &lt; required ${usd(v)}</div><button class="topup" data-topup="${v}">Top up on OKX</button>`;
+  $('#fErr').hidden=!err;$('#fErr').innerHTML=err;const tb=$('#fErr [data-topup]');if(tb)tb.onclick=()=>topup(+tb.dataset.topup);$('#fAmt').classList.toggle('err',!!err);
+  $('#runFusion').disabled=!!err||!S.running||S.m.running;return !err}
+const layerNames=['Regime & Macro','Market Structure','Intelligence','Classic Strategy','Meta / Guardrail'];
+$('#runFusion').onclick=()=>{if(!validateAmt())return;S.m.running=true;S.m.result=null;$('#runFusion').disabled=true;$('#runFusion').textContent='Running Fusion cycle…';
+  let i=0;const box=$('#fResult');
+  const step=()=>{box.innerHTML=`<div class="card steps-run">${layerNames.map((n,j)=>`<div class="${j<i?'ok':''}">${j<i?'✓':j===i?'●':'○'} ${n}</div>`).join('')}</div>`;
+    if(i++<layerNames.length)setTimeout(step,380);else finish()};step();
+  function finish(){const d=candles(),tr=d[d.length-1].c-d[d.length-12].c;const b=base(S.m.pair),p=px[b];
+    const action=Math.abs(tr)/p<.002?'HOLD':tr>0?'BUY':'SELL';const r={Low:[.015,.008],Med:[.025,.012],High:[.04,.02]}[S.m.risk];
+    const dir=action==='SELL'?-1:1;
+    S.m.result={action,pair:S.m.pair,conv:(.58+Math.random()*.3).toFixed(2),entry:p,tp:p*(1+dir*r[0]),sl:p*(1-dir*r[1]),amt:S.m.amt,lev:S.m.lev,tf:$('#fTf').value,days:$('#fDays').value};
+    S.m.running=false;$('#runFusion').textContent='Run Fusion Cycle';validateAmt();renderResult();pushFeed('Fusion',`${action} ${b} · conviction ${S.m.result.conv}`)}};
+function renderResult(){const r=S.m.result,box=$('#fResult');if(!r){if(!S.m.running)box.innerHTML='';return}
+  const d=pd(r.entry),notional=r.amt*r.lev;
+  box.innerHTML=`<div class="result"><div class="row"><div><span class="label">Fusion result · ${r.tf} · ${r.days}d</span>
+    <div style="font-family:var(--f-display);font-size:18px;font-weight:600;margin-top:4px">${base(r.pair)}/USDT</div></div><span class="pill ${r.action}">${r.action}</span></div>
+    <div class="kv"><div><span class="label">Entry</span><b>${fmt(r.entry,d)}</b></div><div><span class="label">TP</span><b class="up">${fmt(r.tp,d)}</b></div><div><span class="label">SL</span><b class="down">${fmt(r.sl,d)}</b></div>
+    <div><span class="label">Conviction</span><b>${r.conv}</b></div><div><span class="label">Margin</span><b>${usd(r.amt,0)}</b></div><div><span class="label">Size</span><b>${usd(notional,0)}</b></div></div>
+    ${r.action==='HOLD'?'<div class="hint">No clear edge right now. Fusion recommends waiting.</div><button class="btn" id="dismiss">Dismiss</button>':
+    `<div class="btns"><button class="btn" id="dismiss">Dismiss</button><button class="btn go" id="place">Place ${r.action==='BUY'?'long':'short'} · ${r.lev}×</button></div>`}</div>`;
+  $('#dismiss').onclick=()=>{S.m.result=null;renderResult()};
+  const pl=$('#place');if(pl)pl.onclick=()=>gate(`Place ${r.action==='BUY'?'long':'short'} ${base(r.pair)}`,()=>{positions.unshift({p:r.pair,side:r.action==='BUY'?'Long':'Short',type:r.lev>1?'Futures':'Spot',lev:r.lev,size:r.amt*r.lev/r.entry,entry:px[base(r.pair)],src:'Manual',tp:r.tp,sl:r.sl});
+    S.usdt-=r.amt;S.vol+=r.amt*r.lev;S.m.result=null;renderAll();pushFeed('Execution',`${r.action==='BUY'?'Long':'Short'} ${base(r.pair)} filled · OCO set`);push('fill',`Order filled · ${base(r.pair)}`,`${r.action==='BUY'?'Long':'Short'} ${usd(r.amt*r.lev,0)} at ${fmt(px[base(r.pair)],pd(r.entry))} · TP/SL set`,'manual')})}
+$$('[data-pf]').forEach(b=>b.onclick=()=>{S.m.pf=b.dataset.pf;$$('[data-pf]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));renderPositions()});
+function renderPositions(){const list=positions.filter(p=>S.m.pf==='All'||p.type===S.m.pf);$('#posCount').textContent='· '+positions.length;
+  $('#closeAll').disabled=!positions.length;
+  $('#posList').innerHTML=list.map((p,i)=>{const u=upnl(p),pct=u/(p.size*p.entry/p.lev)*100,d=pd(p.entry);return `<div class="pos">
+    <div class="posrow" data-exp="${positions.indexOf(p)}"><b>${base(p.p)}</b> <span class="${p.side==='Long'?'up':'down'}" style="font-size:11.5px;font-weight:700">${p.side} ${p.lev}×</span> <span class="tag" style="padding:1px 6px">${p.type}</span> <span class="tag" style="padding:1px 6px">${p.src}</span></div>
+    <div class="num ${u>=0?'up':'down'}" style="text-align:right">${sgn(u)} <span style="font-size:11px">(${pct.toFixed(1)}%)</span></div>
+    <div class="sub">Entry ${fmt(p.entry,d)} · Mark ${fmt(px[base(p.p)],d)} · TP ${fmt(p.tp,d)} · SL ${fmt(p.sl,d)}</div>
+    <div style="text-align:right"><button class="xbtn" data-close="${positions.indexOf(p)}">Close</button></div></div>`}).join('')||'<div class="empty">No open positions.</div>';
+  $$('[data-close]').forEach(b=>b.onclick=()=>{const p=positions[+b.dataset.close];bio('Close '+base(p.p)+' position',()=>{const u=upnl(p);closePos([p]);renderAll();push('fill',base(p.p)+' position closed',`${p.side} closed · ${sgn(u)}`,'portfolio')})});
+  $$('[data-exp]').forEach(b=>b.onclick=()=>explain(positions[+b.dataset.exp]));
+}
+$('#closeAll').onclick=()=>sheet('Close all positions?',`Closes ${positions.length} positions at market on OKX.`,'Close all',()=>bio('Close all positions',()=>{const n=positions.length;closePos([...positions]);renderAll();push('fill','All positions closed',`${n} positions closed at market`,'portfolio')}));
+
+// ---------- AUTO AUTONOMOUS ----------
+const autoPairs=['BTC','ETH','SOL','XRP','DOGE','ADA','BNB','AVAX'];
+const budget=()=>Object.values(S.a.pairs).reduce((a,b)=>a+(+b.b||0),0);
+const presets={Low:{mlt:1,mdl:3,mps:2,mpt:5},Medium:{mlt:3,mdl:6,mps:3,mpt:8},High:{mlt:5,mdl:10,mps:5,mpt:12}};
+const strategies=[['Short','Short Term','15m – 1h candles, intraday focus'],['Long','Long Term','4h – 1d candles, swing trades'],['Hybrid','Hybrid','Multi-timeframe analysis']];
+const stratName=k=>strategies.find(s=>s[0]===k)[1];
+const sw=(id,on,title,sub)=>`<div class="row" style="background:var(--surface-2);border-radius:12px;padding:12px"><div><b style="font-size:13.5px">${title}</b><div class="hint">${sub}</div></div><button class="switch" role="switch" aria-checked="${on}" id="${id}" aria-label="${title}"></button></div>`;
+function renderAuto(){
+  const a=S.a,on=a.active&&S.running&&!a.wizard;
+  $('#autoPill').className='spill'+(on?' on':'');$('#autoPill').innerHTML=`<span class="dot ${on?'':'idle'}"></span>${on?'Active':'Inactive'}`;
+  $('#autoHint').textContent=on?'Running since '+a.since.toTimeString().slice(0,5):'Configure your settings and launch to start';
+  const body=$('#autoBody');
+  if(!S.running){body.innerHTML='<div class="card stack"><b>Kill switch is on</b><div class="hint">Resume trading from the Live tab before launching Auto Autonomous.</div><a class="btn" href="#live" style="text-align:center;text-decoration:none;color:var(--fg)">Go to Live</a></div>';return}
+  if(on){const n=Object.keys(a.pairs).length;
+    body.innerHTML=`<div class="panel">
+    <div class="card stack"><div class="row"><span class="label">Allocation</span><b class="num">${usd(budget(),0)}</b></div>
+      <div class="chips">${Object.entries(a.pairs).map(([k,v])=>`<span class="tag" style="color:var(--fg)">${k} · ${usd(+v.b,0)} · ${v.l}×</span>`).join('')}</div>
+      <div class="review">
+        <div><span>Strategy</span><b>${stratName(a.strat)}</b></div>
+        <div><span>Risk</span><b>${a.risk} · ${a.mlt}% / trade · ${a.mdl}% / day</b></div>
+        <div><span>Positions</span><b class="num">${a.mps} per symbol · ${a.mpt} total</b></div>
+        <div><span>Cycles / cooldowns</span><b class="num">${a.cycles}/day · ${a.cdt}m · ${a.cdl}m</b></div>
+        <div><span>TML · Auto-pause</span><b>${a.tml?'On':'Off'} · ${a.ap?'On':'Off'}</b></div></div></div>
+    <div class="card stack" id="layers"></div>
+    <div class="card"><span class="label">Venues</span>
+      <div class="row" style="padding:10px 0;border-bottom:1px solid var(--line)"><div><b>OKX</b><div class="hint">Read + trade API · Withdrawals off</div></div><span class="tag" style="color:var(--up);border-color:var(--up)">Connected</span></div>
+      <div class="row" style="padding-top:10px"><div><b>DEX rail</b><div class="hint">Self-custody wallet swaps</div></div><span class="tag">Coming soon</span></div></div>
+    <div class="btns"><button class="btn" id="aEdit">Edit settings</button><button class="btn ghost-d" id="aStop">Stop autonomous</button></div></div>`;
+    $('#layers').innerHTML='<div class="row"><span class="label">Agents</span><span class="tag">21 active · '+n+' pairs</span></div>'+
+      [['Regime & Macro',['Regime','Macro','Volatility','Correlation']],['Market Structure',['Order Book','Liquidity','Funding','Open Interest']],
+       ['Intelligence',['Signal','Sentiment','On-chain','News','RL Meta']],['Classic Strategy',['Trend','Mean Reversion','Breakout','Momentum']],
+       ['Meta / Guardrail',['Risk','Execution','Drawdown','Kill Switch']]].map(([nm,ag])=>`<div class="layer"><b style="font-size:13px">${nm}</b><div class="agents">${ag.map(x=>`<span class="ag"><span class="dot"></span>${x}</span>`).join('')}</div></div>`).join('');
+    $('#aEdit').onclick=()=>{a.wizard=true;a.step=1;renderAuto()};
+    $('#aStop').onclick=()=>sheet('Stop Auto Autonomous?','Fusion stops opening new trades. Open positions keep their TP and SL until you close them.','Stop',()=>{a.active=false;a.enabled=false;setEngine();renderAuto();pushFeed('Guardrail','Auto Autonomous stopped by user');toast('Autonomous stopped')});
+    return}
+  if(!a.wizard){
+    body.innerHTML=`<div class="card" style="text-align:center;padding:28px 18px;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <b style="font-family:var(--f-display);font-size:17px">Autonomous mode is not active</b>
+      <div class="hint" style="max-width:32ch;font-size:12.5px">Set your trading pairs, budget, risk limits and automation settings. Once launched, Fusion AI executes trades within your parameters.</div>
+      <button class="btn go" id="aConf" style="margin-top:6px">Configure &amp; Launch</button></div>`;
+    $('#aConf').onclick=()=>{a.wizard=true;a.step=1;renderAuto()};return}
+  const st=a.step,lbl=['Pairs & budget','Risk limits','Automation'];
+  let h=`<div class="card stack"><div class="row"><div><b style="font-family:var(--f-display);font-size:16px">Autonomous Config</b><div class="hint">Set up Fusion AI trading parameters</div></div><button class="xbtn" style="color:var(--muted);border-color:var(--line)" id="aCancel">Cancel</button></div>
+    <div><div class="stepper">${[1,2,3].map(i=>`<span class="s ${i<st?'done':i===st?'cur':''}">${i<st?'✓':i}</span>${i<3?`<span class="ln ${i<st?'done':''}"></span>`:''}`).join('')}</div>
+    <div class="steplabels">${lbl.map(l=>`<span>${l}</span>`).join('')}</div></div>`;
+  if(st===1){const tot=budget(),over=tot>S.usdt,none=!Object.keys(a.pairs).length;
+    h+=`<div class="pairgrid">${autoPairs.map(k=>`<button data-ap="${k}" aria-pressed="${!!a.pairs[k]}">${k}/USDT</button>`).join('')}</div>
+    ${none?'<div class="hint">Pick at least one pair.</div>':`<div class="colhead"><span class="label">Pair</span><span class="label">Budget (USDT)</span><span class="label">Leverage</span></div>
+    ${Object.entries(a.pairs).map(([k,v])=>`<div class="alloc-row"><b>${k}</b><input class="in" type="number" min="0" inputmode="decimal" id="b-${k}" data-ab="${k}" value="${esc(v.b)}" aria-label="${k} budget"><input class="in" type="number" min="1" max="20" inputmode="numeric" id="l-${k}" data-al="${k}" value="${esc(v.l)}" aria-label="${k} leverage"></div>`).join('')}`}
+    <div class="total"><span class="label">Total budget</span><b id="aTot">${usd(tot)}</b></div>
+    <div class="alert" id="aErr" ${over?'':'hidden'}><b>Insufficient balance</b><div class="hint" style="color:var(--fg)" id="aErrT">Available ${usd(S.usdt)} &lt; required ${usd(tot)}</div><button class="topup" id="aTop">Top up on OKX</button></div>
+    <div class="row hint"><span>Available</span><span class="num" style="color:var(--fg)">${usd(S.usdt)}</span></div>
+    <div class="row" style="justify-content:flex-end"><button class="primary" style="width:auto;padding-inline:22px" id="aNext" ${over||none||tot<=0?'disabled':''}>Continue →</button></div>`}
+  if(st===2){h+=`<div class="seg risk3" role="group" aria-label="Risk level">${['Low','Medium','High'].map(r=>`<button data-ar="${r}" aria-pressed="${a.risk===r}">${r}</button>`).join('')}</div>
+    <div class="row"><label class="label" for="aMlt">Max loss per trade</label><b class="num" style="color:var(--aqua)" id="aMltV">${a.mlt}%</b></div><input type="range" id="aMlt" min="0.5" max="10" step="0.5" value="${a.mlt}">
+    <div class="row"><label class="label" for="aMdl">Max daily loss</label><b class="num" style="color:var(--aqua)" id="aMdlV">${a.mdl}%</b></div><input type="range" id="aMdl" min="1" max="25" step="1" value="${a.mdl}">
+    <div class="grid2"><div class="field"><label class="label" for="aMps">Max positions / symbol</label><input class="in" type="number" min="1" max="10" id="aMps" value="${a.mps}"></div>
+      <div class="field"><label class="label" for="aMpt">Max positions total</label><input class="in" type="number" min="1" max="50" id="aMpt" value="${a.mpt}"></div></div>
+    <div style="background:var(--surface-2);border-radius:12px;padding:12px" id="aSum"></div>
+    <div class="row"><button class="btn" id="aBack">← Back</button><button class="primary" style="width:auto;padding-inline:22px" id="aNext">Continue →</button></div>`}
+  if(st===3){h+=`<span class="label">Strategy</span><div class="pairgrid strat">${strategies.map(([k,t,d])=>`<button data-as="${k}" aria-pressed="${a.strat===k}"><b>${t}</b><span>${d}</span></button>`).join('')}</div>
+    <div class="grid2"><div class="field"><label class="label" for="aCyc">Cycles / day</label><input class="in" type="number" min="1" max="500" id="aCyc" value="${a.cycles}"></div>
+      <div class="field"><label class="label" for="aCdt">Cooldown after trade (min)</label><input class="in" type="number" min="0" id="aCdt" value="${a.cdt}"></div></div>
+    <div class="grid2"><div class="field"><label class="label" for="aCdl">Cooldown after loss (min)</label><input class="in" type="number" min="0" id="aCdl" value="${a.cdl}"></div>
+      <div class="field"><label class="label" for="aReset">Daily reset (UTC)</label><input class="in" type="time" id="aReset" value="${a.reset}"></div></div>
+    ${sw('aEn',a.enabled,'Autonomous Trading','Let Mariah execute trades automatically')}
+    ${sw('aTml',a.tml,'Trade Management Layer (TML)','Trailing stop-loss and DCA management')}
+    ${sw('aAp',a.ap,'Auto-Pause on Kill Switch','Pause autonomous trading when the kill switch activates')}
+    <div class="row"><button class="btn" id="aBack">← Back</button><button class="btn go" id="aLaunch">🚀 Save &amp; Launch</button></div>`}
+  body.innerHTML=h+'</div>';
+  $('#aCancel').onclick=()=>{a.wizard=false;renderAuto()};
+  const atp=$('#aTop');if(atp)atp.onclick=()=>topup(budget());
+  // step 1
+  $$('[data-ap]').forEach(b=>b.onclick=()=>{const k=b.dataset.ap;if(a.pairs[k])delete a.pairs[k];else a.pairs[k]={b:100,l:5};renderAuto()});
+  $$('[data-ab]').forEach(i=>i.oninput=()=>{a.pairs[i.dataset.ab].b=i.value;const tot=budget(),over=tot>S.usdt;$('#aTot').textContent=usd(tot);$('#aErr').hidden=!over;$('#aErrT').innerHTML=`Available ${usd(S.usdt)} &lt; required ${usd(tot)}`;$('#aNext').disabled=over||tot<=0});
+  $$('[data-al]').forEach(i=>i.oninput=()=>{a.pairs[i.dataset.al].l=Math.min(20,Math.max(1,+i.value||1))});
+  // step 2
+  const sum=()=>{const s=$('#aSum');if(s)s.innerHTML=`<div class="row" style="margin-bottom:8px"><b style="font-size:13px">⚠ Risk summary</b></div>
+    <div class="grid2 hint" style="gap:6px 14px"><span class="row">Max loss / trade <b class="num" style="color:var(--fg)">${a.mlt}%</b></span><span class="row">Max daily loss <b class="num" style="color:var(--fg)">${a.mdl}%</b></span>
+    <span class="row">Positions / symbol <b class="num" style="color:var(--fg)">${a.mps}</b></span><span class="row">Positions total <b class="num" style="color:var(--fg)">${a.mpt}</b></span></div>
+    <div class="hint" style="margin-top:8px">Worst-case daily loss on ${usd(budget(),0)}: <b class="num down">${usd(budget()*a.mdl/100)}</b></div>`};sum();
+  $$('[data-ar]').forEach(b=>b.onclick=()=>{a.risk=b.dataset.ar;Object.assign(a,presets[a.risk]);renderAuto()});
+  [['aMlt','mlt','aMltV','%'],['aMdl','mdl','aMdlV','%']].forEach(([id,k,v,u])=>{const el=$('#'+id);if(el)el.oninput=()=>{a[k]=+el.value;$('#'+v).textContent=a[k]+u;sum()}});
+  [['aMps','mps'],['aMpt','mpt'],['aCyc','cycles'],['aCdt','cdt'],['aCdl','cdl']].forEach(([id,k])=>{const el=$('#'+id);if(el)el.oninput=()=>{a[k]=Math.max(0,+el.value||0);sum()}});
+  const rs=$('#aReset');if(rs)rs.oninput=()=>a.reset=rs.value;
+  // step 3
+  $$('[data-as]').forEach(b=>b.onclick=()=>{a.strat=b.dataset.as;$$('[data-as]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))});
+  [['aEn','enabled'],['aTml','tml'],['aAp','ap']].forEach(([id,k])=>{const el=$('#'+id);if(el)el.onclick=()=>{a[k]=!a[k];el.setAttribute('aria-checked',a[k])}});
+  const nx=$('#aNext');if(nx)nx.onclick=()=>{a.step++;renderAuto()};
+  const bk=$('#aBack');if(bk)bk.onclick=()=>{a.step--;renderAuto()};
+  const ln=$('#aLaunch');if(ln)ln.onclick=()=>gate('Launch Auto Autonomous',()=>{const was=a.active;a.enabled=true;a.active=true;a.wizard=false;if(!was)a.since=new Date();setEngine();renderAuto();
+    pushFeed('Fusion',`Auto Autonomous ${was?'updated':'launched'} · ${Object.keys(a.pairs).length} pairs · ${stratName(a.strat)}`);push('auto',was?'Auto settings saved':'Auto Autonomous launched',`${Object.keys(a.pairs).length} pairs · ${usd(budget(),0)} · ${a.risk} risk`,'auto')});
+}
+function setMode(m){S.mode=m;$$('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.mode===m)));$('#p-manual').hidden=m!=='manual';$('#p-auto').hidden=m!=='auto';
+  if(m==='manual'){renderPx();drawCandles();renderPositions();validateAmt()}else renderAuto()}
+$$('[data-mode]').forEach(b=>b.onclick=()=>{NAV.h=b.dataset.mode;setHash(NAV.h);setMode(b.dataset.mode)});
+$$('[data-rail]').forEach(b=>b.onclick=()=>{if(b.dataset.rail==='DEX'){toast('DEX rail coming soon');return}});
+
+// ---------- portfolio ----------
+const balColor={USDT:'--indigo',BTC:'--gold',ETH:'--aqua',SOL:'--up',OKB:'--warn'};
+function renderPortfolio(){
+  const bals=[['USDT',S.usdt],['BTC',0.85],['ETH',12],['SOL',180],['OKB',210]];
+  const val=b=>b[0]==='USDT'?b[1]:b[0]==='OKB'?b[1]*48.6:b[1]*px[b[0]];
+  const tot=bals.reduce((a,b)=>a+val(b),0);
+  $('#alloc').innerHTML=bals.map(b=>`<i style="flex:${val(b)};background:var(${balColor[b[0]]})"></i>`).join('');
+  $('#balTbl').innerHTML='<tr><th>Asset</th><th class="r">Amount</th><th class="r">Value</th></tr>'+bals.map(b=>`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(${balColor[b[0]]});margin-right:8px"></span><b>${b[0]}</b></td><td class="r num">${fmt(b[1],b[0]==='USDT'?2:b[1]<10?4:2)}</td><td class="r num">${usd(val(b),0)}<div style="color:var(--dim);font-size:10.5px">${(val(b)/tot*100).toFixed(1)}%</div></td></tr>`).join('');
+  $('#posTbl').innerHTML='<tr><th>Pair</th><th class="r">Entry</th><th class="r">Mark</th><th class="r">PnL</th></tr>'+positions.map(p=>{const u=upnl(p),m=px[base(p.p)];return `<tr class="posrow" data-pexp="${positions.indexOf(p)}"><td><b>${base(p.p)}</b> <span class="${p.side==='Long'?'up':'down'}" style="font-size:11px">${p.side}</span></td><td class="r num">${fmt(p.entry,pd(p.entry))}</td><td class="r num">${fmt(m,pd(m))}</td><td class="r num ${u>=0?'up':'down'}">${sgn(u,0)}</td></tr>`}).join('')
+  +(positions.length?'':'<tr><td colspan="4" style="color:var(--muted)">No open positions.</td></tr>');
+  $$('[data-pexp]').forEach(r=>r.onclick=()=>explain(positions[+r.dataset.pexp]));
+  renderHist();
+}
+const hist=[];(()=>{const now=Date.now();for(let i=0;i<26;i++){const p=pairs[i%6],pnl=(Math.random()-.36)*900;hist.push({p,side:Math.random()<.6?'Long':'Short',pnl,ts:now-(i*1.1+Math.random())*86400000})}})();
+function renderHist(){const rows=hist.filter(h=>Date.now()-h.ts<S.hp*86400000);const net=rows.reduce((a,b)=>a+b.pnl,0),wins=rows.filter(r=>r.pnl>0).length;
+  $('#histTbl').innerHTML=`<tr><th>${rows.length} trades · ${Math.round(wins/Math.max(rows.length,1)*100)}% win</th><th class="r ${net>=0?'up':'down'}" style="font-family:var(--f-num)">${sgn(net,0)}</th></tr>`+
+  rows.slice(0,10).map(h=>`<tr><td><b>${base(h.p)}</b> <span style="color:var(--muted);font-size:11.5px">${h.side} · ${new Date(h.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span></td><td class="r num ${h.pnl>=0?'up':'down'}">${sgn(h.pnl,0)}</td></tr>`).join('')}
+
+$$('[data-tf]').forEach(b=>b.onclick=()=>{S.tf=b.dataset.tf;$$('[data-tf]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));draw()});
+$$('[data-sf]').forEach(b=>b.onclick=()=>{S.sf=b.dataset.sf;$$('[data-sf]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));renderSignals()});
+$$('[data-hp]').forEach(b=>b.onclick=()=>{S.hp=+b.dataset.hp;$$('[data-hp]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));renderHist()});
+
+// ---------- Mariah chat (scripted demo) ----------
+function reply(q){q=q.toLowerCase();const day=S.equity-S.start;
+  if(/pause|stop/.test(q)){if(S.a.active){S.a.active=false;S.a.enabled=false;setEngine();renderAuto();return 'Done. Auto Autonomous is stopped. Your open positions keep their TP and SL. Say "resume" to restart it.'}return 'Auto Autonomous is already off.'}
+  if(/resume|start|launch/.test(q)){if(!S.running)return 'The kill switch is on. Resume trading from the Live tab first.';S.a.active=true;S.a.enabled=true;S.a.wizard=false;S.a.since=new Date();setEngine();renderAuto();return `Auto Autonomous is on: ${Object.keys(S.a.pairs).length} pairs, ${S.a.risk} risk, max ${S.a.mlt}% loss per trade and ${S.a.mdl}% per day.`}
+  if(/risk|exposure|drawdown/.test(q))return `You're on ${S.a.risk} risk: max ${S.a.mlt}% loss per trade, ${S.a.mdl}% per day, up to ${S.a.mpt} positions. Today's loss is 0.4% of your ${S.a.mdl}% daily limit across ${positions.length} positions. Every position has an OCO stop on OKX.`;
+  if(/sol|why/.test(q))return 'I went long SOL at 208.90. Market Structure saw a bid-heavy book near 211, Trend and Momentum agreed on the 4h, and your TradingView setup fired a buy. Combined conviction was 0.74. Stop is at 203.50.';
+  if(/doing|today|pnl|profit/.test(q))return `Today you're ${day>=0?'up':'down'} ${usd(Math.abs(day))} (${(day/S.start*100).toFixed(2)}%). Unrealized is ${sgn(totalU())} and realized is ${sgn(S.real)}.`;
+  return 'I can tell you about your PnL, open positions, risk, or why I took a trade. I can also stop or resume Auto Autonomous.'}
+function addMsg(t,who){const d=document.createElement('div');d.className='msg '+who;d.textContent=t;$('#chat').appendChild(d);d.scrollIntoView({block:'end',behavior:'smooth'});return d}
+function ask(q){if(!q.trim())return;addMsg(q,'me');const t=addMsg('','ai');t.innerHTML='<span class="typing"><span></span><span></span><span></span></span>';
+  setTimeout(()=>{t.textContent=reply(q);t.scrollIntoView({block:'end',behavior:'smooth'})},700)}
+addMsg('Good afternoon. Markets are steady and Fusion is running 4 positions on OKX. What do you want to know?','ai');
+$('#chatForm').onsubmit=e=>{e.preventDefault();ask($('#chatIn').value);$('#chatIn').value=''};
+$$('#sugs .chip').forEach(b=>b.onclick=()=>ask(b.textContent));
+
+// ================= MOBILE FEATURES =================
+S.n={inbox:[],prefs:{fill:true,tpsl:true,loss:true,kill:true,signal:true,auto:true,recap:true},thr:80,recapTime:'08:00'};
+S.sec={bio:true,tfa:true,revoked:false,kyc:true,sessions:[['iPhone 16 Pro','This device · Florida, US',true],['MacBook Pro · Chrome','Miami, US · 2h ago',false],['Windows · Edge','Dubai, AE · 3d ago',false]]};
+S.ack=false;S.lowBal=false;S.cv='board';S.shareP='7D';S.hideAmt=false;
+const icon={fill:'✓',tpsl:'◎',loss:'!',kill:'⏻',signal:'↗',auto:'◉',recap:'★',sec:'🔒'};
+const timeNow=()=>new Date().toTimeString().slice(0,5);
+
+// ---- sheets ----
+function openSheet(html){$('#sheetHost').innerHTML=`<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+  $('#scrim').onclick=e=>{if(e.target.id==='scrim')closeSheet()};return $('#sheetHost .sheet')}
+function closeSheet(){$('#sheetHost').innerHTML=''}
+
+// ---- Face ID ----
+const faceSVG='<svg viewBox="0 0 64 64"><path d="M6 20V12a6 6 0 0 1 6-6h8M44 6h8a6 6 0 0 1 6 6v8M58 44v8a6 6 0 0 1-6 6h-8M20 58h-8a6 6 0 0 1-6-6v-8"/><path d="M22 24v4M42 24v4M32 26v10h-3M24 44c5 4 11 4 16 0"/></svg>';
+function bio(label,cb){if(!S.sec.bio){cb();return}
+  const sh=openSheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:6px"><div class="face" id="fc">${faceSVG}<span class="scan"></span></div><b id="fcT">Face ID</b><div class="hint">${label}</div><button class="btn" id="fcX" style="margin-top:8px">Cancel</button></div>`);
+  $('#fcX').onclick=()=>{clearTimeout(bio.t);closeSheet()};
+  bio.t=setTimeout(()=>{const f=$('#fc');if(!f)return;f.classList.add('ok');$('#fcT').textContent='Confirmed';setTimeout(()=>{closeSheet();cb()},450)},1100)}
+
+// ---- Risk disclosure ----
+const discText=`<div class="disc"><div><b>Trading crypto carries a high risk of loss.</b> Prices can move sharply and you can lose some or all of the funds you allocate.</div>
+<div><b>Leverage magnifies losses</b> as well as gains. Futures positions can be liquidated.</div>
+<div><b>Fusion AI does not guarantee results.</b> Risk limits such as max daily loss are targets, not guarantees, and may be exceeded in fast markets.</div>
+<div><b>Your funds stay in your exchange account.</b> MX1 has read and trade access only and cannot withdraw.</div>
+<div><b>Past performance does not guarantee future results.</b></div>
+<div style="color:var(--gold);font-size:11.5px">Draft wording · pending counsel review</div></div>`;
+function disclose(cb){const sh=openSheet(`<h3>Before you trade</h3><div class="scroll">${discText}</div>
+  <label class="ack"><input type="checkbox" id="ackC"> I understand the risks and that MX1 does not guarantee returns.</label>
+  <div class="btns"><button class="btn" id="ackX">Cancel</button><button class="btn go" id="ackOk" disabled>Accept</button></div>`);
+  $('#ackC').onchange=e=>$('#ackOk').disabled=!e.target.checked;$('#ackX').onclick=closeSheet;
+  $('#ackOk').onclick=()=>{S.ack=true;closeSheet();cb()}}
+function gate(label,cb){if(S.sec.revoked){toast('Reconnect OKX first');go('security');return}
+  const go=()=>bio(label,cb);if(!S.ack)disclose(go);else go()}
+
+// ---- Push notifications ----
+function push(cat,title,body,to){const it={cat,title,body,to,ts:new Date(),read:false};S.n.inbox.unshift(it);S.n.inbox.length=Math.min(S.n.inbox.length,30);badge();
+  if(S.n.prefs[cat]===false)return;
+  const host=$('#bannerHost');host.innerHTML=`<button class="banner" id="bn"><span class="mark mk">MX1</span><span style="min-width:0"><b>${esc(title)}</b><p>${esc(body)}</p></span><span class="when">now</span></button>`;
+  $('#bn').onclick=()=>{host.innerHTML='';it.read=true;badge();if(to)go(to);else inbox()};
+  clearTimeout(push.t);push.t=setTimeout(()=>host.innerHTML='',4200)}
+function badge(){const n=S.n.inbox.filter(x=>!x.read).length;const b=$('#badge');b.hidden=!n;b.textContent=n>9?'9+':n}
+function inbox(){const items=S.n.inbox;openSheet(`<div class="row"><h3>Notifications</h3><button class="xbtn" style="color:var(--aqua);border-color:var(--line)" id="ibAll">Mark all read</button></div>
+  <div class="scroll" id="ibList">${items.map((x,i)=>`<button class="ibx ${x.read?'':'unread'}" data-ib="${i}" style="text-align:left;width:100%"><span class="k">${icon[x.cat]||'•'}</span><span style="flex:1;min-width:0"><b style="font-size:13.5px">${esc(x.title)}</b><div class="hint" style="font-size:12.5px;color:var(--muted)">${esc(x.body)}</div></span><span class="hint num">${x.ts.toTimeString().slice(0,5)}</span></button>`).join('')||'<div class="empty">You\'re all caught up.</div>'}</div>
+  <a class="btn" href="#alerts" id="ibSet" style="text-align:center;text-decoration:none;color:var(--fg)">Notification settings</a>`);
+  $('#ibAll').onclick=()=>{items.forEach(x=>x.read=true);badge();inbox()};$('#ibSet').onclick=closeSheet;
+  $$('[data-ib]').forEach(b=>b.onclick=()=>{const x=items[+b.dataset.ib];x.read=true;badge();closeSheet();if(x.to)go(x.to)})}
+$('#bell').onclick=inbox;
+
+// ---- Top up ----
+function topup(need){const sh=openSheet(`<h3>Add funds on OKX</h3><p>Your funds stay in your own OKX account. In the app this opens OKX so you can move USDT into your trading account.</p>
+  <div class="total"><span class="label">Available now</span><b>${usd(S.usdt)}</b></div>
+  ${need?`<div class="hint">You need at least <b style="color:var(--fg)">${usd(need-S.usdt)}</b> more for this setup.</div>`:''}
+  <div class="qchips" style="grid-template-columns:repeat(3,1fr)">${[100,500,1000].map(v=>`<button data-tu="${v}">+$${fmt(v,0)}</button>`).join('')}</div>
+  <input class="in" id="tuAmt" type="number" min="1" inputmode="decimal" value="${need?Math.ceil(need-S.usdt):500}" aria-label="Amount">
+  <div class="btns"><button class="btn" id="tuX">Cancel</button><button class="btn go" id="tuOk">Open OKX</button></div>
+  <div class="hint" style="text-align:center">Demo: tapping Open OKX adds the funds instantly.</div>`);
+  $$('[data-tu]').forEach(b=>b.onclick=()=>$('#tuAmt').value=b.dataset.tu);$('#tuX').onclick=closeSheet;
+  $('#tuOk').onclick=()=>{const v=+$('#tuAmt').value||0;if(v<=0)return;S.usdt+=v;closeSheet();renderAll();push('fill','Deposit received',`${usd(v)} USDT is now available on OKX`);}}
+
+// ---- Trade explanation ----
+const agentsAll=['Regime','Trend','Momentum','Order Book','Funding','Sentiment','On-chain','RL Meta'];
+function explain(p){const b=base(p.p),seed=[...p.p].reduce((a,c)=>a+c.charCodeAt(0),0),long=p.side==='Long';
+  const votes=agentsAll.map((n,i)=>{const r=((seed*(i+3))%100)/100;const agree=r>.25;return [n,agree?(long?'Long':'Short'):'Neutral',Math.round(45+((seed*(i+7))%50))]});
+  const agreeN=votes.filter(v=>v[1]!=='Neutral').length,conv=(.55+agreeN/agentsAll.length*.35).toFixed(2);
+  const u=upnl(p),rr=Math.abs(p.tp-p.entry)/Math.abs(p.entry-p.sl),d=pd(p.entry);
+  openSheet(`<div class="row"><div><span class="label">Why Mariah took this trade</span><h3 style="margin-top:4px">${b}/USDT · ${p.side} ${p.lev}×</h3></div><span class="pill ${long?'BUY':'SELL'}">${long?'LONG':'SHORT'}</span></div>
+  <div class="scroll">
+  <div class="msg ai" style="max-width:100%">${b} was ${long?'holding higher lows with buyers stepping in':'failing at resistance with sellers in control'}. ${agreeN} of ${agentsAll.length} agents agreed on ${long?'a long':'a short'}, ${p.src==='Manual'?'and you confirmed it with a manual Fusion cycle':'so Fusion opened it automatically'}. Conviction ${conv}.</div>
+  <div class="kv"><div><span class="label">Entry</span><b>${fmt(p.entry,d)}</b></div><div><span class="label">TP</span><b class="up">${fmt(p.tp,d)}</b></div><div><span class="label">SL</span><b class="down">${fmt(p.sl,d)}</b></div>
+  <div><span class="label">Reward : risk</span><b>${rr.toFixed(1)} : 1</b></div><div><span class="label">PnL</span><b class="${u>=0?'up':'down'}">${sgn(u,0)}</b></div><div><span class="label">Source</span><b>${p.src}</b></div></div>
+  <span class="label">Agent votes</span>
+  <div class="bars">${votes.map(([n,v,w])=>`<div class="vote"><span>${n}</span><span style="font-size:11.5px;font-weight:700;color:${v==='Long'?'var(--up)':v==='Short'?'var(--down)':'var(--muted)'}">${v}</span><span class="vbar"><i style="width:${w}%;background:${v==='Neutral'?'var(--dim)':'var(--aqua)'}"></i></span></div>`).join('')}</div>
+  <div class="hint">Signal fusion weights each agent 60% by its track record and 40% by the RL meta-agent.</div></div>
+  <div class="btns"><button class="btn" id="exAsk">Ask Mariah more</button><button class="btn ghost-d" id="exClose">Close position</button></div>`);
+  $('#exAsk').onclick=()=>{closeSheet();go('mariah');setTimeout(()=>ask(`Tell me more about the ${b} ${p.side.toLowerCase()}`),300)};
+  $('#exClose').onclick=()=>{closeSheet();bio('Close '+b+' position',()=>{closePos([p]);renderAll();push('fill',b+' position closed',`${p.side} ${b} closed at ${fmt(px[b],d)} · ${sgn(u)}`,'portfolio')})}}
+
+// ---- Recap & share ----
+const recap={range:'Nov 2 – 8',trades:58,win:61,net:4812.40,pct:1.98,best:['SOL Long',1140.20],worst:['XRP Short',-312.75],
+  pairs:[['BTC',2210],['SOL',1640],['ETH',980],['DOGE',-120],['XRP',-260]]};
+function showRecap(){const mx=Math.max(...recap.pairs.map(p=>Math.abs(p[1])));
+  openSheet(`<div><span class="label">Weekly recap · ${recap.range}</span><h3 style="margin-top:4px">Mariah made ${recap.trades} trades</h3></div><div class="scroll">
+  <div class="kv"><div><span class="label">Net PnL</span><b class="up">${sgn(recap.net)}</b></div><div><span class="label">Return</span><b class="up">+${recap.pct}%</b></div><div><span class="label">Win rate</span><b>${recap.win}%</b></div></div>
+  <div class="grid2"><div class="card" style="padding:10px"><span class="label">Best trade</span><div style="margin-top:4px"><b>${recap.best[0]}</b> <span class="num up">${sgn(recap.best[1])}</span></div></div>
+  <div class="card" style="padding:10px"><span class="label">Worst trade</span><div style="margin-top:4px"><b>${recap.worst[0]}</b> <span class="num down">${sgn(recap.worst[1])}</span></div></div></div>
+  <span class="label">PnL by pair</span>
+  <div class="bars">${recap.pairs.map(([k,v])=>`<div class="vote" style="grid-template-columns:44px 1fr 70px"><b>${k}</b><span class="vbar"><i style="width:${Math.abs(v)/mx*100}%;background:var(${v>=0?'--up':'--down'})"></i></span><span class="num ${v>=0?'up':'down'}" style="text-align:right">${sgn(v,0)}</span></div>`).join('')}</div>
+  <div class="hint">Demo figures.</div></div>
+  <div class="btns"><button class="btn" id="rcX">Close</button><button class="btn go" id="rcShare">Share</button></div>`);
+  $('#rcX').onclick=closeSheet;$('#rcShare').onclick=()=>{S.shareP='7D';shareCard()}}
+const shareData={Today:[S.equity-S.start,(S.equity-S.start)/S.start*100],'7D':[recap.net,recap.pct],'30D':[11942.18,5.11]};
+function shareCard(){const day=S.equity-S.start;shareData.Today=[day,day/S.start*100];const [v,pc]=shareData[S.shareP];
+  openSheet(`<div class="row"><h3>Share your PnL</h3><div class="chips">${Object.keys(shareData).map(k=>`<button class="chip" data-sp="${k}" aria-pressed="${S.shareP===k}">${k}</button>`).join('')}</div></div>
+  <div class="sharecard"><div class="row"><div class="brand"><div class="mark">MX1</div><b>MX1 Trade</b></div><span class="tag">${S.shareP==='Today'?new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}):S.shareP}</span></div>
+  <div class="pct ${pc>=0?'up':'down'}">${pc>=0?'+':''}${pc.toFixed(2)}%</div>
+  ${S.hideAmt?'':`<div class="num" style="font-size:16px;color:var(--fg)">${sgn(v)}</div>`}
+  ${sparkSVG(S.shareP==='Today'?S.live:S.shareP==='7D'?series['1W']:series['1M'],300,46,pc>=0?css('--aqua'):css('--down'))}
+  <div class="row hint"><span>Traded with Mariah AI</span><span>mx1trade.com</span></div>
+  <div style="font-size:9.5px;color:var(--dim)">Past performance does not guarantee future results.</div></div>
+  <div class="row"><span style="font-size:13.5px">Hide dollar amounts</span><button class="switch" role="switch" aria-checked="${S.hideAmt}" id="shHide" aria-label="Hide dollar amounts"></button></div>
+  <div class="btns"><button class="btn" id="shCopy">Copy caption</button><button class="btn go" id="shSave">Save image</button></div>
+  <div class="hint" style="text-align:center">Share wording to be approved by counsel before launch.</div>`);
+  $$('[data-sp]').forEach(b=>b.onclick=()=>{S.shareP=b.dataset.sp;shareCard()});
+  $('#shHide').onclick=()=>{S.hideAmt=!S.hideAmt;shareCard()};
+  $('#shSave').onclick=()=>toast('Saved to Photos in the app');
+  $('#shCopy').onclick=()=>{const t=`${pc>=0?'+':''}${pc.toFixed(2)}% ${S.shareP} trading with Mariah AI on MX1 Trade. mx1trade.com`;
+    try{navigator.clipboard.writeText(t).then(()=>toast('Caption copied'),()=>toast(t))}catch(e){toast('Copy not available here')}}}
+function sparkSVG(d,w,h,col){const mn=Math.min(...d),mx=Math.max(...d),sp=mx-mn||1;
+  const pts=d.map((v,i)=>`${(i/(d.length-1)*w).toFixed(1)},${(3+(1-(v-mn)/sp)*(h-6)).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:${h}px;display:block"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`}
+
+// ---- Voice ----
+const voiceQs=['How am I doing today?','What\'s my risk right now?','Why did you buy SOL?'];
+$('#mic').onclick=()=>{const f=$('#chatForm'),inp=$('#chatIn');if($('#lsn'))return;
+  const l=document.createElement('div');l.id='lsn';l.className='row';l.style.cssText='flex:1;min-width:0;background:var(--surface);border:1px solid var(--aqua);border-radius:12px;padding:0 13px;justify-content:flex-start';
+  l.innerHTML='<span class="listen">'+'<i></i>'.repeat(9)+'</span><span class="hint" style="color:var(--fg)">Listening…</span>';
+  [...l.querySelectorAll('.listen i')].forEach((x,i)=>x.style.animationDelay=(i*.08)+'s');
+  inp.hidden=true;f.insertBefore(l,inp);
+  setTimeout(()=>{l.remove();inp.hidden=false;ask(voiceQs[Math.floor(Math.random()*voiceQs.length)])},1700)};
+
+// ---- More menu ----
+const mi=(href,ic,t,d,id)=>`<a href="${href}" ${id?`id="${id}"`:''}><span class="ic"><svg viewBox="0 0 24 24">${ic}</svg></span><span class="tx"><b>${t}</b><div>${d}</div></span><span class="chev">›</span></a>`;
+function renderMore(){$('#moreMenu').innerHTML=
+  mi('#portfolio','<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4h8v2"/>','Portfolio','Balances, positions, history')+
+  mi('#community','<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5M16 11a3 3 0 1 0 0-6M21 20c0-2-1.5-4-4-4.6"/>','Community','Leaderboard and feed')+
+  mi('#referrals','<path d="M20 12v8H4v-8M2 7h20v5H2zM12 22V7M12 7S10 2 7 4s5 3 5 3M12 7s2-5 5-3-5 3-5 3"/>','Refer & earn','50% of referred users\' fees')+
+  mi('#share','<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/>','Share PnL card','Branded image for social','miShare')+
+  mi('#recap','<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>','Weekly recap','Nov 2 – 8','miRecap')+
+  mi('#widgets','<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="18" height="8" rx="2"/>','Widgets & Live Activity','Home screen, lock screen, quick actions')+
+  mi('#alerts','<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4"/>','Notifications','Choose what Mariah alerts you about')+
+  mi('#security','<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/>','Security center','API access, sessions, Face ID, 2FA')+
+  mi('#risk','<path d="M12 3l9 16H3zM12 10v4M12 17h.01"/>','Risk disclosures','How trading risk works','miRisk')+
+  mi('#mariah','<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>','Mariah','Chat or talk to your assistant')+
+  mi('#signout','<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>','Sign out','Return to the sign-in screen','miOut');
+  $('#miOut').onclick=e=>{e.preventDefault();signOut()};
+  $('#miShare').onclick=e=>{e.preventDefault();shareCard()};$('#miRecap').onclick=e=>{e.preventDefault();showRecap()};
+  $('#miRisk').onclick=e=>{e.preventDefault();openSheet(`<h3>Risk disclosures</h3><div class="scroll">${discText}</div><div class="hint">${S.ack?'You accepted these on '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})+'.':'You\'ll be asked to accept these before your first trade.'}</div><button class="btn" id="rkX">Close</button>`);$('#rkX').onclick=closeSheet};
+  $('#kycPill').className='spill'+(S.sec.kyc?' on':'');$('#kycPill').innerHTML=`<span class="dot ${S.sec.kyc?'':'idle'}"></span>${S.sec.kyc?'Verified':'Unverified'}`;
+  $('#lowBal').setAttribute('aria-checked',S.lowBal)}
+$('#lowBal').onclick=()=>{S.lowBal=!S.lowBal;if(S.lowBal){S._u=S.usdt;S.usdt=13.98}else S.usdt=S._u||61240.18;renderMore();renderAll();toast(S.lowBal?'Available set to $13.98':'Balance restored')};
+$('#demoPush').onclick=()=>push('signal','Fusion signal · BUY ETH','Conviction 0.82 on the 1h. Tap to review.','manual');
+$('#demoLock').onclick=()=>lockApp();
+$('#demoOb').onclick=()=>onboard(0);
+
+// ---- Community ----
+const board=[['@sol_sniper','Hybrid',18.4],['@mx1_whale','Long Term',14.9],['@delta_neutral','Short Term',12.2],['@fusion_frank','Hybrid',9.7],['@okx_ana','Short Term',8.1],['You','Short Term',5.1],['@quietbid','Long Term',4.3]];
+const posts=[{u:'MX1 Team',av:'MX1',t:'2h',x:'Fusion now runs 21 agents across five layers. Trade Management Layer adds trailing stops and DCA to every Auto position.',l:48,me:false,team:true},
+  {u:'@sol_sniper',av:'SS',t:'4h',x:'Switched Auto to Hybrid this week. Fewer trades, cleaner entries. SOL carried the week.',l:31,me:false},
+  {u:'@delta_neutral',av:'DN',t:'1d',x:'Tip: set cooldown after loss to 15 min. Stopped me revenge trading on volatile days.',l:22,me:false},
+  {u:'@okx_ana',av:'OA',t:'2d',x:'First week on MX1. Kill switch on the lock screen is the feature I didn\'t know I needed.',l:17,me:false}];
+const following=new Set();
+function renderCommunity(){$$('[data-cv]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.cv===S.cv)));
+  if(S.cv==='board')$('#commBody').innerHTML=`<div class="card"><div class="row" style="margin-bottom:6px"><span class="label">Top traders · 30D return</span><span class="tag">Opt-in, anonymized</span></div>
+    ${board.map(([h,s,r],i)=>`<div class="lb"><span class="rk ${i<3?'top':''}">${i+1}</span><div><b style="${h==='You'?'color:var(--aqua)':''}">${h}</b><div class="hint">${s} strategy</div></div><div style="text-align:right"><b class="num up">+${r}%</b>${h==='You'?'':`<div><button class="xbtn" style="color:var(--aqua);border-color:var(--line);margin-top:4px" data-fl="${h}">${following.has(h)?'Following':'Follow'}</button></div>`}</div></div>`).join('')}</div>
+    <div class="hint">Returns are self-reported from linked accounts. Demo data.</div>`;
+  else $('#commBody').innerHTML=posts.map((p,i)=>`<div class="card post"><div class="who"><span class="av" style="${p.team?'background:linear-gradient(140deg,var(--indigo),var(--aqua));color:#06090F':''}">${p.av}</span><div><b>${p.u}</b> ${p.team?'<span class="tag" style="color:var(--gold);border-color:var(--gold)">Official</span>':''}<div class="hint">${p.t} ago</div></div></div>
+    <div style="line-height:1.5">${p.x}</div><div class="acts"><button data-lk="${i}" style="color:${p.me?'var(--aqua)':'inherit'}">♥ ${p.l+(p.me?1:0)}</button><button>Reply</button></div></div>`).join('');
+  $$('[data-fl]').forEach(b=>b.onclick=()=>{const h=b.dataset.fl;following.has(h)?following.delete(h):following.add(h);renderCommunity()});
+  $$('[data-lk]').forEach(b=>b.onclick=()=>{const p=posts[+b.dataset.lk];p.me=!p.me;renderCommunity()})}
+$$('[data-cv]').forEach(b=>b.onclick=()=>{S.cv=b.dataset.cv;renderCommunity()});
+
+// ---- Referrals ----
+const refs=[['@nova_trades','Active',412.30],['@jt_capital','Active',318.90],['@bay_breeze','Active',201.15],['@liam.k','Signed up',0],['@mara_v','Active',352.25]];
+function renderReferrals(){const link='mx1trade.com/r/MX1TRADE';const earned=refs.reduce((a,b)=>a+b[2],0);
+  $('#refBody').innerHTML=`<div class="card stack" style="background:linear-gradient(140deg,var(--band),var(--surface))">
+    <div class="big" style="font-size:22px">Earn 50% of the trading fees your referrals generate.</div>
+    <div class="row" style="background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px"><span class="num" style="user-select:all;overflow:hidden;text-overflow:ellipsis">${link}</span><button class="xbtn" style="color:var(--aqua);border-color:var(--line)" id="rfCopy">Copy</button></div>
+    <button class="primary" id="rfShare">Share invite</button></div>
+  <div class="stats"><div class="stat"><div class="label">Referred</div><div class="v">${refs.length+7}</div></div><div class="stat"><div class="label">Active</div><div class="v">${refs.filter(r=>r[1]==='Active').length+3}</div></div><div class="stat"><div class="label">Earned</div><div class="v up">${usd(earned,0)}</div></div></div>
+  <div class="card"><div class="row" style="margin-bottom:6px"><span class="label">Your referrals</span><span class="tag">Paid weekly in USDT</span></div>
+    ${refs.map(([u,s,e])=>`<div class="lb" style="grid-template-columns:1fr auto"><div><b>${u}</b><div class="hint">${s}</div></div><b class="num ${e?'up':''}" style="${e?'':'color:var(--dim)'}">${e?sgn(e):'$0.00'}</b></div>`).join('')}</div>
+  <div class="hint">Fee share is paid from MX1's exchange affiliate fees. Demo figures.</div>`;
+  const cp=t=>{try{navigator.clipboard.writeText(t).then(()=>toast('Copied'),()=>toast('Copy not available here'))}catch(e){toast('Copy not available here')}};
+  $('#rfCopy').onclick=()=>cp('https://'+link);
+  $('#rfShare').onclick=()=>cp(`Trade crypto with Mariah AI on MX1 Trade. Your funds stay in your own exchange account. Join with my link: https://${link}`)}
+
+// ---- Security ----
+function renderSecurity(){const s=S.sec;
+  $('#secBody').innerHTML=`<div class="card stack">
+    <div class="row"><span class="label">OKX API access</span><span class="tag" style="color:${s.revoked?'var(--down)':'var(--up)'};border-color:currentColor">${s.revoked?'Revoked':'Connected'}</span></div>
+    ${[['Read balances & positions',!s.revoked],['Place & manage trades',!s.revoked],['Withdraw funds',false]].map(([t,ok],i)=>`<div class="check"><span>${t}</span><span class="st" style="color:${ok?'var(--up)':i===2?'var(--aqua)':'var(--dim)'}">${ok?'✓ Granted':i===2?'✕ Never requested':'Off'}</span></div>`).join('')}
+    <div class="hint">MX1 is non-custodial. Your funds never leave your OKX account and MX1 cannot withdraw them.</div>
+    ${s.revoked?'<button class="primary" id="scRe">Reconnect OKX</button>':'<button class="btn ghost-d" id="scRev">Revoke MX1 access</button>'}</div>
+  <div class="card stack"><span class="label">Sign-in & approvals</span>
+    <div class="row"><div><b style="font-size:13.5px">Face ID</b><div class="hint">Unlock the app and confirm trades, launches and the kill switch</div></div><button class="switch" role="switch" aria-checked="${s.bio}" id="scBio" aria-label="Face ID"></button></div>
+    <div class="row"><div><b style="font-size:13.5px">Two-factor authentication</b><div class="hint">Authenticator app code at sign-in</div></div><button class="switch" role="switch" aria-checked="${s.tfa}" id="scTfa" aria-label="Two-factor authentication"></button></div></div>
+  <div class="card"><div class="row" style="margin-bottom:6px"><span class="label">Active sessions</span>${s.sessions.length>1?'<button class="xbtn" id="scAll">Sign out others</button>':''}</div>
+    ${s.sessions.map(([d,w,me],i)=>`<div class="lb" style="grid-template-columns:1fr auto"><div><b>${d}</b><div class="hint">${w}</div></div>${me?'<span class="tag" style="color:var(--up);border-color:var(--up)">This device</span>':`<button class="xbtn" data-so="${i}">Sign out</button>`}</div>`).join('')}</div>`;
+  $('#scBio').onclick=()=>{if(s.bio){bio('Turn off Face ID',()=>{s.bio=false;renderSecurity();toast('Face ID off')})}else{s.bio=true;renderSecurity();toast('Face ID on')}};
+  $('#scTfa').onclick=()=>bio(s.tfa?'Turn off two-factor':'Turn on two-factor',()=>{s.tfa=!s.tfa;renderSecurity();push('sec','Security change',`Two-factor authentication turned ${s.tfa?'on':'off'}`,'security')});
+  $$('[data-so]').forEach(b=>b.onclick=()=>{s.sessions.splice(+b.dataset.so,1);renderSecurity();toast('Signed out')});
+  const all=$('#scAll');if(all)all.onclick=()=>bio('Sign out other devices',()=>{s.sessions=s.sessions.filter(x=>x[2]);renderSecurity();toast('Other sessions signed out')});
+  const rv=$('#scRev');if(rv)rv.onclick=()=>sheet('Revoke MX1 access?','MX1 will lose read and trade access to your OKX account. Auto Autonomous stops. Open positions stay on OKX and are no longer managed by Fusion.','Revoke',()=>bio('Revoke OKX access',()=>{s.revoked=true;S.a.active=false;setEngine();renderSecurity();push('sec','OKX access revoked','MX1 can no longer read or trade your OKX account','security')}));
+  const re=$('#scRe');if(re)re.onclick=()=>onboard(1)}
+
+// ---- Alerts settings ----
+const alertCats=[['fill','Trade fills','Every order filled or closed'],['tpsl','Take-profit & stop-loss','TP hit, SL hit, trailing stop moved'],['loss','Daily loss limit','When you reach 80% and 100% of your max daily loss'],['kill','Kill switch','When trading is stopped or resumed'],['auto','Auto Autonomous','Launched, paused or settings changed'],['signal','Fusion signals','Buy/sell signals above your confidence threshold'],['recap','Daily & weekly recap','A summary of what Mariah did']];
+function renderAlerts(){$('#alBody').innerHTML=`<div class="card stack">${alertCats.map(([k,t,d])=>`<div class="row"><div><b style="font-size:13.5px">${t}</b><div class="hint">${d}</div></div><button class="switch" role="switch" aria-checked="${S.n.prefs[k]}" data-al2="${k}" aria-label="${t}"></button></div>`).join('')}</div>
+  <div class="card stack"><div class="row"><label class="label" for="thr">Signal confidence threshold</label><b class="num" id="thrV">${S.n.thr}%</b></div><input type="range" id="thr" min="50" max="95" step="5" value="${S.n.thr}">
+    <div class="hint">Only alert me about signals at or above this confidence.</div>
+    <div class="row"><label class="label" for="rcT">Daily recap time</label><input class="in" type="time" id="rcT" value="${S.n.recapTime}" style="width:auto"></div></div>
+  <button class="btn" id="alTest">Send test notification</button>`;
+  $$('[data-al2]').forEach(b=>b.onclick=()=>{const k=b.dataset.al2;S.n.prefs[k]=!S.n.prefs[k];b.setAttribute('aria-checked',S.n.prefs[k])});
+  $('#thr').oninput=e=>{S.n.thr=+e.target.value;$('#thrV').textContent=S.n.thr+'%'};$('#rcT').oninput=e=>S.n.recapTime=e.target.value;
+  $('#alTest').onclick=()=>push('fill','Test notification','Notifications from MX1 Trade are working.')}
+
+// ---- Widgets, Live Activity, quick actions ----
+function renderWidgets(){const day=S.equity-S.start,u=totalU(),on=S.a.active&&S.running,col=day>=0?css('--up'):css('--down');
+  $('#wBody').innerHTML=`<span class="label">Home screen</span>
+  <div class="widgets"><div class="wg sm"><div class="row"><span class="mark" style="width:22px;height:22px;font-size:8px;border-radius:6px">MX1</span><span class="hint">Equity</span></div>
+    <b class="num" style="font-size:17px">${usd(S.equity,0)}</b><b class="num" style="font-size:12px;color:${col}">${sgn(day,0)}</b>${sparkSVG(S.live.slice(-40),120,34,col)}</div>
+  <div class="wg"><div class="row"><span class="row" style="gap:6px"><span class="mark" style="width:22px;height:22px;font-size:8px;border-radius:6px">MX1</span><b style="font-size:12px">Fusion</b></span><span class="spill ${on?'on':''}" style="padding:3px 7px;font-size:9.5px"><span class="dot ${on?'':'idle'}" style="width:5px;height:5px"></span>${on?'Auto on':'Auto off'}</span></div>
+    <div class="grid2" style="gap:6px"><div><div class="hint">Today</div><b class="num" style="color:${col}">${sgn(day,0)}</b></div><div><div class="hint">Unrealized</div><b class="num ${u>=0?'up':'down'}">${sgn(u,0)}</b></div>
+    <div><div class="hint">Positions</div><b class="num">${positions.length}</b></div><div><div class="hint">Last signal</div><b style="font-size:12px">${S.signals[0].a} ${base(S.signals[0].p)}</b></div></div></div></div>
+  <span class="label">Lock screen · Live Activity</span>
+  <div class="lock"><div class="island"><span class="row" style="gap:6px"><span class="o"></span><span>Mariah</span></span><b class="num" style="color:${col}">${sgn(day,0)}</b></div>
+    <div class="hint" style="color:#c8d0e0">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div><div class="time">${timeNow()}</div>
+    <div class="la"><div class="row"><span class="row" style="gap:8px"><span class="mark" style="width:24px;height:24px;font-size:8px;border-radius:7px">MX1</span><b style="font-size:13px">${!S.running?'Trading stopped':on?'Auto Autonomous':'Fusion online'}</b></span><span class="hint">${positions.length} positions</span></div>
+      <div class="row"><b class="num" style="font-size:24px;color:${col}">${sgn(day)}</b><span class="hint">today</span></div>
+      <div class="btns"><button class="btn" id="laPause" style="padding:9px">${on?'Pause Auto':'Open app'}</button><button class="btn danger" id="laKill" style="padding:9px" ${S.running?'':'disabled'}>Kill switch</button></div></div></div>
+  <span class="label">Quick actions · long-press the app icon</span>
+  <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:12px;background:linear-gradient(160deg,#1a2238,#0a0e16)">
+    <div class="qa"><button id="qaKill" style="color:var(--down)">Kill switch<span>⏻</span></button><button id="qaPnl">Today's PnL<span>${sgn(day,0)}</span></button><button id="qaAsk">Ask Mariah<span>🎙</span></button><button id="qaAuto">${on?'Pause Auto':'Launch Auto'}<span>◉</span></button></div>
+    <div class="appicon">MX1</div></div>`;
+  const kill=()=>{if(!S.running){toast('Already stopped');return}$('#killBtn').click()};
+  $('#laKill').onclick=kill;$('#qaKill').onclick=kill;
+  $('#laPause').onclick=()=>{if(on){S.a.active=false;setEngine();renderWidgets();push('auto','Auto Autonomous paused','Paused from your lock screen','auto')}else go('live')};
+  $('#qaPnl').onclick=()=>go('live');$('#qaAsk').onclick=()=>{go('mariah');setTimeout(()=>$('#mic').click(),300)};
+  $('#qaAuto').onclick=()=>{go('auto')}}
+
+const MX1_LOGO='data:image/png;base64,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';
+// ---- Login (first screen) ----
+const LG={tier:'retail',region:'US',panel:null,busy:false};
+function login(){let o=$('#loginO');if(!o){o=document.createElement('div');o.className='login';o.id='loginO';document.body.appendChild(o)}renderLogin()}
+function renderLogin(){const o=$('#loginO');if(!o)return;const ret=LG.tier==='retail';
+  const panels={
+    learn:`<b>How sign-in works</b><div>You sign in on OKX, not on MX1. OKX asks you to approve read and trade access for MX1. Withdrawals are never requested, so your funds stay in your own account and only you can move them.</div><div>You can revoke access any time from the Security center or from OKX.</div>`,
+    terms:`<b>Terms of service</b><div>Final terms are being prepared with counsel and will appear here before launch.</div>`,
+    privacy:`<b>Privacy policy</b><div>The final privacy policy is being prepared with counsel and will appear here before launch.</div>`,
+    help:`<b>Help &amp; support</b><div>Email <span style="user-select:all;color:#0F1A2E">support@mx1trade.com</span> or message <span style="user-select:all;color:#0F1A2E">@Mx1_Founder</span> on Telegram.</div>`,
+    inst:`<b>Institutional sign-in</b><div>The institutional flow is being designed next: KYB, managed-account onboarding and full MX1 trading discretion. Switch to Retail to try the mobile app.</div>`};
+  o.innerHTML=`<div class="lg-card">
+    <img class="lg-logo" src="${MX1_LOGO}" alt="MX1 · mx1trade.com">
+    <span class="lg-status"><i></i>All systems operational</span>
+    <h1 class="lg-h">Welcome to Mariah AI</h1>
+    <div class="lg-sub">Multi-Agent AI Execution Trading Platform<b>${ret?'For Self-Directed &amp; Autonomous Retail Accounts':'For Managed Institutional Accounts'}</b></div>
+    <div class="lg-seg" role="group" aria-label="Account type"><button data-lt="retail" aria-pressed="${ret}">Retail</button><button data-lt="institutional" aria-pressed="${!ret}">Institutional</button></div>
+    <div class="lg-venue lg-grad">CEX — Exchange</div>
+    <button class="lg-okx" id="lgGo" ${LG.busy?'disabled':''}><span class="ob">OKX</span><span>${LG.busy?'Redirecting to OKX…':'Continue with OKX'}</span><span class="ch">${LG.busy?'<span class="lg-spin" style="display:block"></span>':'›'}</span></button>
+    ${LG.panel?`<div class="lg-panel">${panels[LG.panel]}<button class="x" id="lgPx">Close</button></div>`:
+    `<div class="lg-note">You'll be redirected to ${LG.region==='US'?'OKX US':'OKX Global'} to authenticate and grant access. Trades execute on your own OKX account.<br><button id="lgLearn">Learn more →</button></div>`}
+    <button class="lg-link" id="lgReg">Wrong region? Continue on ${LG.region==='US'?'OKX Global':'OKX US'}</button>
+    <div class="lg-foot"><button data-lp="terms">Terms of service</button><button data-lp="privacy">Privacy policy</button><button data-lp="help">Help &amp; support</button></div>
+  </div>`;
+  $$('[data-lt]').forEach(b=>b.onclick=()=>{LG.tier=b.dataset.lt;LG.panel=null;renderLogin()});
+  $$('[data-lp]').forEach(b=>b.onclick=()=>{LG.panel=b.dataset.lp;renderLogin()});
+  const pl=$('#lgLearn');if(pl)pl.onclick=()=>{LG.panel='learn';renderLogin()};
+  const px=$('#lgPx');if(px)px.onclick=()=>{LG.panel=null;renderLogin()};
+  $('#lgReg').onclick=()=>{LG.region=LG.region==='US'?'Global':'US';renderLogin()};
+  $('#lgGo').onclick=()=>{if(!ret){LG.panel='inst';renderLogin();return}
+    LG.busy=true;renderLogin();setTimeout(()=>{LG.busy=false;o.remove();onboard(1);ob.oauth=1;renderOb()},900)}}
+function signOut(){sheet('Sign out?','You will need to sign in with OKX again. Auto Autonomous keeps running on OKX within your limits.','Sign out',()=>{LG.tier='retail';LG.panel=null;login()})}
+
+// ---- Lock screen ----
+function lockApp(){const o=document.createElement('div');o.className='overlay lockbg';o.id='lockO';
+  o.innerHTML=`<div class="inner" style="justify-content:center;align-items:center;text-align:center">
+    <div class="mark" style="width:64px;height:64px;font-size:20px;border-radius:18px">MX1</div><div class="big">MX1 Trade</div><div class="hint">Locked</div>
+    <div class="face" id="lkF" style="margin-top:20px">${faceSVG}</div>
+    <button class="primary" id="lkGo" style="max-width:280px">Unlock with Face ID</button><button class="hint" id="lkPw" style="background:none">Use passcode</button></div>`;
+  document.body.appendChild(o);
+  const go=()=>{const f=$('#lkF');f.insertAdjacentHTML('beforeend','<span class="scan"></span>');$('#lkGo').disabled=true;
+    setTimeout(()=>{f.classList.add('ok');setTimeout(()=>{o.remove();if(!lockApp.done){lockApp.done=1;setTimeout(()=>push('recap','Your weekly recap is ready',`Mariah made ${recap.trades} trades, ${sgn(recap.net,0)} for ${recap.range}`,'recap'),900)}},400)},1000)};
+  $('#lkGo').onclick=go;$('#lkPw').onclick=go}
+
+// ---- Onboarding ----
+const ob={step:0,oauth:0,kyc:0};
+function onboard(start){ob.step=start||0;ob.oauth=start===1?0:ob.oauth;let o=$('#obO');if(!o){o=document.createElement('div');o.className='overlay lockbg';o.id='obO';document.body.appendChild(o)}renderOb()}
+function renderOb(){const o=$('#obO');const st=ob.step;let c='';
+  if(st===0)c=`<div class="mark" style="width:56px;height:56px;font-size:17px;border-radius:16px">MX1</div><p class="big">Your AI trading desk, in your pocket.</p>
+    <div class="stack">${[['Your money stays yours','Funds never leave your exchange account. MX1 can trade but never withdraw.'],['21 AI agents, one decision','Mariah fuses regime, structure, intelligence and classic strategies.'],['You stay in control','Risk limits, Face ID approvals and a one-tap kill switch.']].map(([t,d])=>`<div class="check" style="align-items:flex-start"><span style="color:var(--aqua)">◆</span><span><b>${t}</b><div class="hint">${d}</div></span></div>`).join('')}</div>
+    <div style="flex:1"></div><button class="primary" id="obN">Get started</button>`;
+  if(st===1)c=`<p class="big">Connect your OKX account</p><div class="hint" style="font-size:13px">Sign in with OKX and approve read and trade access. You can revoke it any time from the Security center.</div>
+    ${ob.oauth===0?`<div style="flex:1"></div><button class="primary" id="obOk" style="background:#fff">Continue with OKX</button>`:
+     ob.oauth===1?`<div class="oauth"><div class="hd"><span>OKX</span><span style="font-size:11px;font-weight:600">Authorize app</span></div><div class="bd">
+       <div><b>MX1 Trade</b> is requesting access to your account</div>
+       <div class="check"><span>Read account data</span><span class="st up">✓</span></div><div class="check"><span>Trade</span><span class="st up">✓</span></div><div class="check"><span>Withdraw</span><span class="st" style="color:var(--dim)">Not requested</span></div>
+       <button class="btn go" id="obAuth">Authorize</button></div></div>`:
+     `<div class="check" style="border-color:var(--up)"><span class="dot"></span><span><b>OKX connected</b><div class="hint">Read + trade · withdrawals off</div></span></div><div style="flex:1"></div><button class="primary" id="obN">Continue</button>`}`;
+  if(st===2)c=`<p class="big">Verify your identity</p><div class="hint" style="font-size:13px">Required by regulation. Takes about two minutes.</div>
+    <div class="stack">${['Government ID','Selfie check','Proof of address'].map((t,i)=>`<div class="check"><span>${t}</span><span class="st" style="color:${ob.kyc>i?'var(--up)':ob.kyc===i&&ob.kycRun?'var(--aqua)':'var(--dim)'}">${ob.kyc>i?'✓ Done':ob.kyc===i&&ob.kycRun?'Checking…':'To do'}</span></div>`).join('')}</div>
+    <div class="hint">Powered by Sumsub</div><div style="flex:1"></div>
+    ${ob.kyc>=3?'<button class="primary" id="obN">Continue</button>':`<button class="primary" id="obKyc" ${ob.kycRun?'disabled':''}>${ob.kycRun?'Verifying…':'Start verification'}</button>`}`;
+  if(st===3)c=`<p class="big">Stay secure and in the loop</p>
+    <div class="row check"><div><b>Face ID</b><div class="hint">Unlock and approve trades</div></div><button class="switch" role="switch" aria-checked="${S.sec.bio}" id="obBio" aria-label="Face ID"></button></div>
+    <div class="row check"><div><b>Notifications</b><div class="hint">Fills, stops, signals and recaps</div></div><button class="switch" role="switch" aria-checked="${S.n.prefs.fill}" id="obNt" aria-label="Notifications"></button></div>
+    <div style="flex:1"></div><button class="primary" id="obN">Continue</button>`;
+  if(st===4)c=`<div class="orb" style="width:64px;height:64px"></div><p class="big">You're all set.</p><div class="hint" style="font-size:13px">Set up Auto Autonomous so Mariah can start trading within your limits, or explore first.</div>
+    <div style="flex:1"></div><button class="primary" id="obAuto">Set up Auto Autonomous</button><button class="btn" id="obDone">Explore the app</button>`;
+  o.innerHTML=`<div class="inner"><div class="row"><div class="obdots" style="flex:1;justify-content:flex-start">${[0,1,2,3,4].map(i=>`<i class="${i<=st?'on':''}"></i>`).join('')}</div><button class="hint" id="obX" style="background:none;font-size:13px">Close</button></div>${c}</div>`;
+  $('#obX').onclick=()=>{o.remove();go('live')};
+  const n=$('#obN');if(n)n.onclick=()=>{ob.step++;renderOb()};
+  const ok=$('#obOk');if(ok)ok.onclick=()=>{ob.oauth=1;renderOb()};
+  const au=$('#obAuth');if(au)au.onclick=()=>{ob.oauth=2;S.sec.revoked=false;setEngine();renderAll();renderOb()};
+  const ky=$('#obKyc');if(ky)ky.onclick=()=>{ob.kycRun=true;ob.kyc=0;renderOb();const t=setInterval(()=>{ob.kyc++;if(ob.kyc>=3){clearInterval(t);ob.kycRun=false;S.sec.kyc=true}if($('#obO'))renderOb()},800)};
+  const bb=$('#obBio');if(bb)bb.onclick=()=>{S.sec.bio=!S.sec.bio;bb.setAttribute('aria-checked',S.sec.bio)};
+  const nt=$('#obNt');if(nt)nt.onclick=()=>{const v=!S.n.prefs.fill;Object.keys(S.n.prefs).forEach(k=>S.n.prefs[k]=v);nt.setAttribute('aria-checked',v)};
+  const oa=$('#obAuto');if(oa)oa.onclick=()=>{o.remove();S.a.wizard=true;S.a.step=1;go('auto');renderAll()};
+  const od=$('#obDone');if(od)od.onclick=()=>{o.remove();go('live')}}
+
+// periodic trade-management events
+setInterval(()=>{if(!S.running||!positions.length||!S.a.tml)return;const p=positions[Math.floor(Math.random()*positions.length)],b=base(p.p);
+  if(upnl(p)>0){p.sl=p.side==='Long'?Math.max(p.sl,px[b]*.985):Math.min(p.sl,px[b]*1.015);push('tpsl','Trailing stop raised · '+b,`SL moved to ${fmt(p.sl,pd(p.sl))} to lock in profit`,'portfolio');pushFeed('TML','Trailing stop moved on '+p.p)}},38000);
+
+// ---------- routing ----------
+const tabs=['live','trade','signals','portfolio','more'];
+const views=['live','trade','signals','portfolio','mariah','more','community','referrals','security','widgets','alerts'];
+const tabOf={manual:'trade',auto:'trade',community:'more',referrals:'more',security:'more',widgets:'more',alerts:'more',mariah:null};
+const actions={share:()=>shareCard(),recap:()=>showRecap(),risk:()=>$('#miRisk')&&$('#miRisk').click()};
+function cur(){const h=NAV.h;return h==='manual'||h==='auto'?'trade':views.includes(h)?h:'live'}
+function route(){const h=NAV.h;
+  if(actions[h]){NAV.h='more';setHash('more');renderMore();actions[h]();}
+  const t=cur(),tab=h in tabOf?tabOf[h]:t;
+  views.forEach(x=>{$('#v-'+x).hidden=x!==t});
+  tabs.forEach(x=>{const a=$(`[data-tab="${x}"]`);if(x===tab)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+  $('#composer').hidden=t!=='mariah';$('#fab').hidden=t==='mariah';window.scrollTo(0,0);
+  if(t==='trade')setMode(h==='auto'||h==='manual'?h:S.mode);
+  renderAll()}
+function renderAll(){const t=cur();$('#availTop').textContent=usd(S.usdt);$('#fAvail').textContent='Available: '+usd(S.usdt);
+  if(t==='live')renderLive();if(t==='portfolio')renderPortfolio();if(t==='signals')renderSignals();
+  if(t==='more')renderMore();if(t==='community')renderCommunity();if(t==='referrals')renderReferrals();if(t==='security')renderSecurity();if(t==='widgets')renderWidgets();if(t==='alerts')renderAlerts();
+  if(t==='trade'){if(S.mode==='manual'){renderPositions();validateAmt();renderPx()}else renderAuto()}}
+// In-page navigation: works even where the host blocks hash links
+const NAV={h:(()=>{try{return location.hash.slice(1)}catch(e){return ''}})()};
+function setHash(h){try{history.replaceState(null,'','#'+h)}catch(e){}}
+function go(h){h=String(h||'live').replace(/^#/,'');NAV.h=h;setHash(h);route()}
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[href^="#"]');if(!a)return;e.preventDefault();go(a.getAttribute('href'))},true);
+addEventListener('hashchange',()=>{let h='';try{h=location.hash.slice(1)}catch(e){}if(h&&h!==NAV.h){NAV.h=h;route()}});addEventListener('resize',()=>{draw();drawCandles()});
+
+// ---------- ticking ----------
+function tick(){
+  Object.keys(px).forEach(k=>px[k]*=1+(Math.random()-.485)*0.0012);
+  const u=totalU();S.equity+=u-(tick.u??u);tick.u=u;if(S.running&&S.a.active)S.vol+=Math.random()*1800;
+  S.live.push(S.equity);if(S.live.length>120)S.live.shift();
+  series['1D'][series['1D'].length-1]=S.equity;
+  Object.keys(cache).forEach(k=>{const b=k.replace(/-USDT.*/,''),l=cache[k][cache[k].length-1];l.c=px[b];l.h=Math.max(l.h,l.c);l.l=Math.min(l.l,l.c)});
+  $('#clock').textContent=new Date().toTimeString().slice(0,8);
+  const t=cur();
+  if(t==='live')renderLive();
+  if(t==='trade'&&S.mode==='manual'){renderPx();drawCandles();if(Math.random()<.4)renderPositions()}
+  if(t==='portfolio'&&Math.random()<.3)renderPortfolio();
+  if(t==='widgets'&&(tick.w=(tick.w||0)+1)%3===0)renderWidgets();
+}
+let fi=0;
+setInterval(tick,1000);
+setInterval(()=>{if(S.running)pushFeed(...feedLines[fi++%feedLines.length])},4500);
+setInterval(()=>{const ns=mkSig(0);S.signals.unshift(ns);if(ns.a!=='HOLD'&&ns.c>=S.n.thr)push('signal',`Fusion signal · ${ns.a} ${base(ns.p)}`,`${ns.c}% confidence on the ${ns.tf} · ${ns.src}`,'signals');S.signals.length=Math.min(S.signals.length,20);if(cur()==='signals')renderSignals(true)},12000);
+
+for(let i=0;i<4;i++)feed.push({a:feedLines[i+4][0],t:feedLines[i+4][1],ts:new Date(Date.now()-(i+1)*95000)});
+renderFeed();setEngine();renderSignals();route();tick();
+$('#recapCard').onclick=showRecap;login();
+})();
+</script>
+
+</body>
+</html>
